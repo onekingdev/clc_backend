@@ -23,7 +23,7 @@ export const config: ConnectionOptions = {
         logging: false,
         // synchronize: false,
         extra: {
-            socketPath: '/cloudsql/clc-poker:us-central1:clc-poker'
+            socketPath: '/cloudsql/calculator-42469:us-central1:portal-hazme-digital'
         }
     })
 }
