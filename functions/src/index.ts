@@ -17,7 +17,7 @@ import {ActivationCodes} from './entities/ActivationCodes';
 
         const newActivationCode = new ActivationCodes();
         newActivationCode.active = true;
-        newActivationCode.code = 'FREE2020';
+        newActivationCode.code = 'ADMIN2020';
         newActivationCode.createdAt = new Date();
 
         const saved = await repo.save(newActivationCode);
@@ -27,10 +27,37 @@ import {ActivationCodes} from './entities/ActivationCodes';
         response.send(e);
     }
 });
+
+export const getUsers = functions.https.onRequest(async (request, response) => {
+    const connection = await connect();
+    const repo = connection.getRepository(Users);
+
+    const all = await repo.find();
+
+    response.send(all);
+});
+
 */
 
+export const validateCode = functions.https.onRequest(async (request, response) => {
+    const {activationCode} = request.body;
+
+    const connection = await connect();
+    const repo = connection.getRepository(ActivationCodes);
+
+    let result: object = await repo.findOne({
+        where: {
+            code: activationCode
+        }
+    });
+
+    if (!result) result = {error: 403};
+
+    response.send(result);
+});
+
 export const createUser = functions.https.onRequest(async (request, response) => {
-    const {activationCode, email, userName} = request.body;
+    const {activationCode, email, userName, stringID} = request.body;
 
     try {
         const connection = await connect();
@@ -56,9 +83,9 @@ export const createUser = functions.https.onRequest(async (request, response) =>
         newUser.userName = userName;
         newUser.email = email;
         newUser.type = type();
-        newUser.masteredLevel = 0;
+        newUser.rank = 1;
         newUser.createdAt = new Date();
-
+        newUser.stringID = stringID;
 
         const saved = await repoUsers.save(newUser);
 
@@ -68,9 +95,19 @@ export const createUser = functions.https.onRequest(async (request, response) =>
     }
 });
 
-export const getUsers = functions.https.onRequest(async (request, response) => {
+export const getUserByEmail = functions.https.onRequest(async (request, response) => {
+    const {email} = request.body;
     const connection = await connect();
     const repo = connection.getRepository(Users);
+
+    const all = await repo.findOne({email: email});
+
+    response.send(all);
+});
+
+export const getCodes = functions.https.onRequest(async (request, response) => {
+    const connection = await connect();
+    const repo = connection.getRepository(ActivationCodes);
 
     const all = await repo.find();
 
