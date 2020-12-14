@@ -9,16 +9,19 @@ export class Users extends BaseEntity {
     activationCodeID: number;
 
     @Column()
-    avatar: string;
+    avatar: number;
 
     @Column()
-    firstName: string;
+    userName: string;
 
     @Column()
-    lastName: string;
+    email: string;
 
     @Column()
     type: string; // admin, free, premium
+
+    @Column()
+    masteredLevel: number;
 
     @Column()
     createdAt: Date;

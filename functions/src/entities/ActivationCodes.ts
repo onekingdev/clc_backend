@@ -1,12 +1,15 @@
 import {Entity, PrimaryGeneratedColumn, Column, BaseEntity} from 'typeorm';
 
 @Entity()
-export class Paths extends BaseEntity {
+export class ActivationCodes extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
-    name: string;
+    code: string;
+
+    @Column()
+    active: boolean;
 
     @Column()
     createdAt: Date;

@@ -9,7 +9,7 @@ export const config: ConnectionOptions = {
     host: '127.0.0.1',
     port: 3306,
     username: 'root',
-    password: 'armandoTodoPoderoso',
+    password: '1234',
     database: 'clc',
     synchronize: true,
     logging: false,
@@ -23,7 +23,7 @@ export const config: ConnectionOptions = {
         logging: false,
         // synchronize: false,
         extra: {
-            socketPath: '/cloudsql/calculator-42469:us-central1:portal-hazme-digital'
+            socketPath: '/cloudsql/clc-poker:us-central1:clc-poker'
         }
     })
 }

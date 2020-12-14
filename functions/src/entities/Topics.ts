@@ -9,5 +9,8 @@ export class Topics extends BaseEntity {
     name: string;
 
     @Column()
+    masteredLevel: number;
+
+    @Column()
     createdAt: Date;
 }

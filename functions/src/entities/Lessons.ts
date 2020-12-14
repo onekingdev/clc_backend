@@ -6,6 +6,9 @@ export class Lessons extends BaseEntity {
     id: number;
 
     @Column()
+    topicID: number;
+
+    @Column()
     name: string;
 
     @Column()
