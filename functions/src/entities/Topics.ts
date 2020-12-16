@@ -9,7 +9,7 @@ export class Topics extends BaseEntity {
     name: string;
 
     @Column()
-    rank: number;
+    masteredLevel: number;
 
     @Column()
     chips: number;
