@@ -1,38 +1,27 @@
 export * from './endpoints/auth';
 export * from './endpoints/library';
-export * from './endpoints/topics';
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+export * from './endpoints/questions';
 
-/*export const createActivationCode = functions.https.onRequest(async (request, response) => {
-    try {
-        const connection = await connect();
-        const repo = connection.getRepository(ActivationCodes);
-
-        const newActivationCode = new ActivationCodes();
-        newActivationCode.active = true;
-        newActivationCode.code = 'ADMIN2020';
-        newActivationCode.createdAt = new Date();
-
-        const saved = await repo.save(newActivationCode);
-
-        response.send(saved);
-    } catch (e) {
-        response.send(e);
+/**
+ * HTTP function that supports CORS requests.
+ *
+ * @param {Object} req Cloud Function request context.
+ * @param {Object} res Cloud Function response context.
+ */
+export const corsEnabledFunction = (req, res) => {
+    // Set CORS headers for preflight requests
+    // Allows GETs from any origin with the Content-Type header
+    // and caches preflight response for 3600s
+  
+    res.set('Access-Control-Allow-Origin', '*');
+  
+    if (req.method === 'OPTIONS') {
+      // Send response to OPTIONS requests
+      res.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,HEAD');
+      res.set('Access-Control-Allow-Headers', '*');
+      res.set('Access-Control-Max-Age', '3600');
+      res.status(204).send('');
+    } else {
+      res.send('Hello World!');
     }
-});
-
-export const getUsers = functions.https.onRequest(async (request, response) => {
-    const connection = await connect();
-    const repo = connection.getRepository(Users);
-
-    const all = await repo.find();
-
-    response.send(all);
-});
-
-*/
+  };

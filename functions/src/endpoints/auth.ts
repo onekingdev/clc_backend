@@ -27,6 +27,7 @@ export const createUser = functions.https.onRequest(async (request, response) =>
         const connection = await connect();
         const repoUsers = connection.getRepository(Users);
         const repoActivationCodes = connection.getRepository(ActivationCodes);
+
         const code = await repoActivationCodes.findOne({code: activationCode});
 
         const type = () => {
@@ -42,11 +43,11 @@ export const createUser = functions.https.onRequest(async (request, response) =>
 
         const newUser = new Users();
         newUser.activationCodeID = code.id;
-        newUser.avatar = '';
+        newUser.avatar = 0;
         newUser.userName = userName;
         newUser.email = email;
         newUser.type = type();
-        newUser.masteredLevel = 1;
+        newUser.rank = 1;
         newUser.createdAt = new Date();
         newUser.stringID = stringID;
 
