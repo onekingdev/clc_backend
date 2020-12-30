@@ -6,6 +6,9 @@ export class Earnings extends BaseEntity {
     id: number;
 
     @Column()
+    userID: number;
+
+    @Column()
     questionID: number;
 
     @Column()

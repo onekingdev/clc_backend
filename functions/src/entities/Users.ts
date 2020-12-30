@@ -12,7 +12,7 @@ export class Users extends BaseEntity {
     activationCodeID: number;
 
     @Column()
-    avatar: number;
+    avatar: string;
 
     @Column()
     userName: string;
@@ -24,7 +24,7 @@ export class Users extends BaseEntity {
     type: string; // admin, free, premium
 
     @Column()
-    rank: number;
+    masteredLevel: number;
 
     @Column()
     createdAt: Date;

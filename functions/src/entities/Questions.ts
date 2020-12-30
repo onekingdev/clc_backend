@@ -6,16 +6,22 @@ export class Questions extends BaseEntity {
     id: number;
 
     @Column()
-    lessonID: number;
+    lessonUID: string;
 
     @Column()
     questionText: string;
 
+    @Column('longtext')
+    handHistory: string;
+
     @Column("simple-json")
-    Answers: { correct: string, wrong1: string, wrong2: string, wrong3: string };
+    answers: { correct: string, wrong1: string, wrong2: string, wrong3: string, wrong4: string };
 
     @Column("simple-json")
     explanation: { correct: string, wrong: string };
+
+    @Column("simple-json")
+    reward: {chips: number, tickets: number};
 
     @Column()
     createdAt: Date;

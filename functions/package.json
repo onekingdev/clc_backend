@@ -3,26 +3,31 @@
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc",
-    "serve": "npm run build && firebase emulators:start --only functions",
+    "serve": "npm run build && npm run copy-files && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css lib/"
   },
   "engines": {
-    "node": "8"
+    "node": "10"
   },
   "main": "lib/index.js",
   "dependencies": {
+    "axios": "^0.21.1",
     "firebase-admin": "^8.10.0",
     "firebase-functions": "^3.6.1",
     "mysql": "^2.18.1",
+    "nodemailer": "^6.4.17",
     "typeorm": "^0.2.29"
   },
   "devDependencies": {
+    "copyfiles": "^1.0.0",
+    "firebase-functions-test": "^0.2.0",
+    "rimraf": "^3.0.2",
     "tslint": "^5.12.0",
-    "typescript": "^3.8.0",
-    "firebase-functions-test": "^0.2.0"
+    "typescript": "^3.8.0"
   },
   "private": true
 }

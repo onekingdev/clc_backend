@@ -6,10 +6,13 @@ export class Topics extends BaseEntity {
     id: number;
 
     @Column()
+    UID: string;
+
+    @Column()
     name: string;
 
     @Column()
-    rank: number;
+    masteredLevel: number;
 
     @Column()
     chips: number;

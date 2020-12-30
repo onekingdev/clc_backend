@@ -9,12 +9,12 @@ export class Library extends BaseEntity {
     image: string;
 
     @Column()
-    duration: string;
+    duration: number;
 
     @Column()
     title: string;
 
-    @Column()
+    @Column('longtext')
     description: string;
 
     @Column()

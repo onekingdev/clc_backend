@@ -6,7 +6,10 @@ export class Lessons extends BaseEntity {
     id: number;
 
     @Column()
-    topicID: number;
+    UID: string;
+
+    @Column()
+    topicUID: string;
 
     @Column()
     name: string;
