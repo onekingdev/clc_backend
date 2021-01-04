@@ -20,6 +20,11 @@ export const uploadLibrary = functions.https.onRequest(async (request, response)
 
     const repoLibrary = connection.getRepository(Library);
 
+    connection.createQueryBuilder()
+        .delete()
+        .from(Library)
+        .execute()
+
     const {library} = request.body;
 
 

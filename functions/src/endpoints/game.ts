@@ -20,7 +20,7 @@ export const getQuestions = functions.https.onRequest(async (request, response) 
                 reward: all[i].reward,
                 description: all[i].questionText,
                 header: name,
-                questionNumber: i,
+                questionNumber: i+1,
                 answers: [
                     {
                         correct: true,
