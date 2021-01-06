@@ -6,25 +6,10 @@ import { Topics } from '../entities/Topics';
 
 export const uploadQuestions = functions.https.onRequest(async (request, response) => {
     const connection = await connect();
+
     const repoQuestions = connection.getRepository(Questions);
     const repoTopics = connection.getRepository(Topics);
     const repoLessons = connection.getRepository(Lessons);
-
-
-    // drop tables
-    connection.createQueryBuilder()
-        .delete()
-        .from(Topics)
-        .execute()
-    connection.createQueryBuilder()
-        .delete()
-        .from(Lessons)
-        .execute()
-    connection.createQueryBuilder()
-        .delete()
-        .from(Questions)
-        .execute()
-
 
     const {questions, lessons, topics} = request.body;
     try {
@@ -44,4 +29,37 @@ export const uploadQuestions = functions.https.onRequest(async (request, respons
     } catch (error) {
         response.send({error: error})
     }
+});
+
+export const dropTopics = functions.https.onRequest(async (request, response) => {
+    const connection = await connect();
+
+    await connection.createQueryBuilder()
+        .delete()
+        .from(Topics)
+        .execute()
+
+    response.send();
+});
+
+export const dropLessons = functions.https.onRequest(async (request, response) => {
+    const connection = await connect();
+
+    await connection.createQueryBuilder()
+        .delete()
+        .from(Lessons)
+        .execute()
+
+    response.send();
+});
+
+export const dropQuestions = functions.https.onRequest(async (request, response) => {
+    const connection = await connect();
+
+    await connection.createQueryBuilder()
+        .delete()
+        .from(Questions)
+        .execute()
+
+    response.send();
 });

@@ -18,19 +18,20 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
 export const uploadLibrary = functions.https.onRequest(async (request, response) => {
     const connection = await connect();
 
-    const repoLibrary = connection.getRepository(Library);
-
-    connection.createQueryBuilder()
+    // drop
+    await connection.createQueryBuilder()
         .delete()
         .from(Library)
         .execute()
+
+    const repoLibrary = connection.getRepository(Library);
 
     const {library} = request.body;
 
 
     (library as Array<Object> || []).forEach(async (value: any) => {
         let data = {image: '', description: '', duration: '', title: ''};
-        if (new URL(value.url).host === 'vimeo.com') data = await vimeoDataExtractor(value.url);
+        if (new URL(value.url).host === 'vimeo.com' || new URL(value.url).host === 'player.vimeo.com') data = await vimeoDataExtractor(value.url);
         else {
             data['description'] = value.description;
             data['image'] = value.image;

@@ -15,5 +15,11 @@ export class Lessons extends BaseEntity {
     name: string;
 
     @Column()
+    rule: string;
+
+    @Column('int', {default: 0})
+    order: number;
+
+    @Column()
     createdAt: Date;
 }

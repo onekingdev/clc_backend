@@ -7,7 +7,9 @@ export const vimeoDataExtractor = async (url: string) => {
     // http://vimeo.com/api/v2/video/253989945.json
     let path = new URL(url).pathname.substr(1, new URL(url).pathname.length);
 
-    return await axios.get(`http://vimeo.com/api/v2/video/${path}.json`,{headers: {
+    path = path.split('/');
+
+    return await axios.get(`http://vimeo.com/api/v2/video/${path.length === 2 ? path[1] : path[0]}.json`,{headers: {
             'Content-Type': 'application/json',
         }})
         .then((res: any) => {
@@ -161,3 +163,25 @@ export const parseHandHistory = (record: string) => {
     })
 }
 
+export const compareValues = (key: string, order = 'asc') => {
+    return function innerSort(a, b) {
+        if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+            return 0;
+        }
+
+        const varA = (typeof a[key] === 'string')
+            ? a[key].toUpperCase() : a[key];
+        const varB = (typeof b[key] === 'string')
+            ? b[key].toUpperCase() : b[key];
+
+        let comparison = 0;
+        if (varA > varB) {
+            comparison = 1;
+        } else if (varA < varB) {
+            comparison = -1;
+        }
+        return (
+            (order === 'desc') ? (comparison * -1) : comparison
+        );
+    };
+}

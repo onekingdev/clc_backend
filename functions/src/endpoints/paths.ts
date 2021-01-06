@@ -4,6 +4,7 @@ import {Topics} from '../entities/Topics';
 import {Lessons} from '../entities/Lessons';
 import {Questions} from '../entities/Questions';
 import {Users} from "../entities/Users";
+import {compareValues} from "../helpers/parser";
 
 export const uploadContent = functions.https.onRequest(async (request, response) => {
     const connection = await connect();
@@ -46,19 +47,22 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
     const all = await repo.find({topicUID: uid});
     let current: any;
 
+    const results = all.sort(compareValues('order', 'asc'));
+
     if (myTopics) {
         const topicIndex = myTopics.findIndex(t => t.UID === uid);
-        if (topicIndex !== -1 && myTopics[topicIndex].lessons.lenght > 0) {
-            myTopics[topicIndex].lessons.forEach(lesson => {
+        if (topicIndex !== -1 && myTopics[topicIndex].lessons.length > 0) {
+            myTopics[topicIndex].lessons.forEach((lesson, index) => {
                 if (!lesson.mastered) {
                     current = lesson;
+                } else if (myTopics[topicIndex].lessons.length-1 === index) {
+                    current = results[index+1]
                 }
             })
-        } else current = all[0]
-    } else current = all[0]
+        } else current = results[0]
+    } else current = results[0]
 
-
-    return {total:all.length, current, all};
+    return {total:results.length, current, all: results};
 }
 
 export const getPaths = functions.https.onRequest(async (request, response) => {
@@ -80,20 +84,22 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
             if (myTopics.some(myTopic => myTopic.id === all[i].id && myTopic.mastered)) {
                 all[i]['status'] = 2;
                 all[i]['lessonUID'] = lessonData.current.UID;
-                all[i]['lessonName'] = lessonData.current.name;
+                all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
+                all[i]['rule'] = lessonData.current.rule;
                 all[i]['allTopicLessons'] = lessonData.all;
                 all[i]['totalTopicLessons'] = lessonData.total;
                 mastered.push(all[i]);
             } else if (myTopics.some(myTopic => myTopic.id === all[i].id && !myTopic.mastered) || all[i].chips === 0 && all[i].tickets === 0 && all[i].masteredLevel <= user.masteredLevel) {
                 all[i]['status'] = 1;
                 all[i]['lessonUID'] = lessonData.current.UID;
-                all[i]['lessonName'] = lessonData.current.name;
+                all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
+                all[i]['rule'] = lessonData.current.rule;
                 all[i]['allTopicLessons'] = lessonData.all;
                 all[i]['totalTopicLessons'] = lessonData.total;
                 available.push(all[i]);
             } else {
                 all[i]['status'] = 0;
-                all[i]['lessonName'] = lessonData.current.name;
+                all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
                 locked.push(all[i]);
             }
         }
@@ -105,6 +111,7 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
                 all[i]['status'] = 1;
                 all[i]['lessonUID'] = lessonData.current.UID;
                 all[i]['lessonName'] = lessonData.current.name;
+                all[i]['rule'] = lessonData.current.rule;
                 all[i]['allTopicLessons'] = lessonData.all;
                 all[i]['totalTopicLessons'] = lessonData.total;
                 available.push(all[i]);
