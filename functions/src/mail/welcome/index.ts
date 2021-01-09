@@ -8,7 +8,9 @@ admin.initializeApp();
 const gmailEmail = "armando.gutierrez@learnwithsocrates.com";
 const gmailPassword = "Bl0ck0101";
 const mailTransport = nodemailer.createTransport({
-    service: 'gmail',
+    service: 'smtp.gmail.com',
+    port: 465,
+    secure: false,
     auth: {
         user: gmailEmail,
         pass: gmailPassword,
@@ -18,9 +20,9 @@ const mailTransport = nodemailer.createTransport({
 let htmlmail=fs.readFileSync("lib/mail/welcome/welcome.html","utf-8").toString();
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
-    //const recipent_email = user.email;
+    const recipent_email = user.email;
 
-    /*const mailOptions = {
+    const mailOptions = {
         from: '"sender name" <sendermail@gmail.com>',
         to: recipent_email,
         subject: 'Welcome to Chip Leader Coaching AI',
@@ -34,5 +36,5 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
     } catch(error) {
         console.error('There was an error while sending the email:', error);
     }
-    return null;*/
+    return null;
 });
