@@ -5,8 +5,10 @@ import {Lessons} from '../entities/Lessons';
 import {Questions} from '../entities/Questions';
 import {Users} from "../entities/Users";
 import {compareValues} from "../helpers/parser";
+import {enableCors} from "../helpers/cors";
 
 export const uploadContent = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
 
     const repoTopics = connection.getRepository(Topics);
@@ -66,6 +68,7 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
 }
 
 export const getPaths = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const {myTopics}  = request.body;
 
     const connection = await connect();

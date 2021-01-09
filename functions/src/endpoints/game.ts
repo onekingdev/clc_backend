@@ -4,11 +4,13 @@ import {connect} from '../config';
 import {Earnings} from "../entities/Earnings";
 import {Questions} from "../entities/Questions";
 import {compareValues, parseHandHistory} from "../helpers/parser";
+import {enableCors} from '../helpers/cors';
 import {Lessons} from "../entities/Lessons";
 import {Topics} from "../entities/Topics";
 import {Users} from "../entities/Users";
 
 export const getQuestions = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
     const repoQuestions = connection.getRepository(Questions);
     const {UID, name} = request.body;
@@ -61,6 +63,7 @@ export const getQuestions = functions.https.onRequest(async (request, response) 
 });
 
 export const getQuestionsAI = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const {myTopics, user}  = request.body;
 
     const connection = await connect();
@@ -147,6 +150,7 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
 });
 
 export const saveEarnings = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
     const repoEarnings = connection.getRepository(Earnings);
 
@@ -198,6 +202,7 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
 
 
 export const check = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
     const repo = connection.getRepository(Lessons);
 
@@ -207,6 +212,7 @@ export const check = functions.https.onRequest(async (request, response) => {
 });
 
 export const deleteTable = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
 
     connection.createQueryBuilder()

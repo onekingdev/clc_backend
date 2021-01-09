@@ -6,10 +6,11 @@ export const prod = process.env.NODE_ENV === 'production';
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
-    host: '127.0.0.1',
+    host: '/cloudsql/chipleadercoaching-webapp:us-central1:clc',
+    //host:'127.0.0.1',
     port: 3306,
     username: 'root',
-    password: '1234',
+    password: 'clc1234',
     database: 'clc',
     synchronize: true,
     logging: false,
@@ -19,11 +20,11 @@ export const config: ConnectionOptions = {
 
     // Production Mode
     ...(prod && {
-        database: 'production',
+        database: 'clc',
         logging: false,
         // synchronize: false,
         extra: {
-            socketPath: '/cloudsql/clc-poker:us-central1:clc-poker'
+            socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
         }
     })
 }

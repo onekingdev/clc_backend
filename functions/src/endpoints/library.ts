@@ -2,10 +2,12 @@ import * as functions from 'firebase-functions';
 import {connect} from '../config';
 import { Library } from '../entities/Library';
 import {vimeoDataExtractor} from "../helpers/parser";
+import {enableCors} from "../helpers/cors";
 
 let URL = require('url').URL;
 
 export const getLibrary = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
     
     const repoLibrary = connection.getRepository(Library);
@@ -16,6 +18,7 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
 });
 
 export const uploadLibrary = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
 
     // drop

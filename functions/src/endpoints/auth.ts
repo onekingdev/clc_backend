@@ -2,8 +2,10 @@ import * as functions from 'firebase-functions';
 import {connect} from '../config';
 import {Users} from '../entities/Users';
 import {ActivationCodes} from '../entities/ActivationCodes';
+import {enableCors} from "../helpers/cors";
 
 export const validateCode = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const {activationCode} = request.body;
 
     const connection = await connect();
@@ -21,6 +23,7 @@ export const validateCode = functions.https.onRequest(async (request, response) 
 });
 
 export const createUser = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const {activationCode, email, userName, stringID} = request.body;
 
     try {
@@ -31,9 +34,9 @@ export const createUser = functions.https.onRequest(async (request, response) =>
 
         const type = () => {
             switch (code.code) {
-                case 'PREMIUM2020':
+                case 'PREMIUM2021':
                     return 'premium';
-                case 'ADMIN2020':
+                case 'ADMIN2021':
                     return 'admin';
                 default:
                     return 'free';
@@ -59,6 +62,7 @@ export const createUser = functions.https.onRequest(async (request, response) =>
 });
 
 export const getUserByEmail = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const {email} = request.body;
     const connection = await connect();
     const repo = connection.getRepository(Users);
@@ -69,6 +73,7 @@ export const getUserByEmail = functions.https.onRequest(async (request, response
 });
 
 export const getCodes = functions.https.onRequest(async (request, response) => {
+    response = enableCors(response);
     const connection = await connect();
     const repo = connection.getRepository(ActivationCodes);
 
