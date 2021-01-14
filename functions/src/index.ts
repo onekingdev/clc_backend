@@ -3,6 +3,8 @@ export * from './endpoints/library';
 export * from './endpoints/paths';
 export * from './endpoints/game';
 export * from './endpoints/questions';
+export * from './endpoints/dropShit';
+export * from './endpoints/checkShit';
 // @ts-ignore
 export * from './mail/welcome';
 // // Start writing Firebase Functions

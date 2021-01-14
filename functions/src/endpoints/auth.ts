@@ -39,6 +39,8 @@ export const createUser = functions.https.onRequest(async (request, response) =>
                         return 'premium';
                     case 'ADMIN2021':
                         return 'admin';
+                    case 'TESTER2021':
+                        return 'tester';
                     default:
                         return 'free';
                 }

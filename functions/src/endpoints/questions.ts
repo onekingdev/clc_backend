@@ -3,7 +3,6 @@ import {connect} from '../config';
 import { Lessons } from '../entities/Lessons';
 import { Questions } from '../entities/Questions';
 import { Topics } from '../entities/Topics';
-import {Library} from "../entities/Library";
 const cors = require('cors')({origin: true});
 
 export const uploadQuestions = functions.https.onRequest(async (request, response) => {
@@ -37,56 +36,4 @@ export const uploadQuestions = functions.https.onRequest(async (request, respons
             response.send({error: error})
         }
     });
-});
-
-export const dropTopics = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
-        const connection = await connect();
-
-        await connection.createQueryBuilder()
-            .delete()
-            .from(Topics)
-            .execute()
-
-        response.send();
-    });
-});
-
-export const dropLessons = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
-        const connection = await connect();
-
-        await connection.createQueryBuilder()
-            .delete()
-            .from(Lessons)
-            .execute()
-
-        response.send();
-    })
-});
-
-export const dropQuestions = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
-        const connection = await connect();
-
-        await connection.createQueryBuilder()
-            .delete()
-            .from(Questions)
-            .execute()
-
-        response.send();
-    })
-});
-
-export const dropLibrary = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
-        const connection = await connect();
-
-        await connection.createQueryBuilder()
-            .delete()
-            .from(Library)
-            .execute()
-
-        response.send();
-    })
 });

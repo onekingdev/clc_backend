@@ -5,12 +5,11 @@ const nodemailer = require('nodemailer');
 
 admin.initializeApp();
 
-const gmailEmail = "armando.gutierrez@learnwithsocrates.com";
-const gmailPassword = "Bl0ck0101";
+const gmailEmail = 'customerservice@learnwithsocrates.com';
+const gmailPassword = 'PW: %j3CajCg';
+
 const mailTransport = nodemailer.createTransport({
-    service: 'smtp.gmail.com',
-    port: 465,
-    secure: false,
+    service: 'gmail',
     auth: {
         user: gmailEmail,
         pass: gmailPassword,
@@ -23,7 +22,7 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
     const recipent_email = user.email;
 
     const mailOptions = {
-        from: '"sender name" <sendermail@gmail.com>',
+        from: '"customerservice" <customerservice@learnwithsocrates.com>',
         to: recipent_email,
         subject: 'Welcome to Chip Leader Coaching AI',
         html: htmlmail
@@ -38,3 +37,4 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
     }
     return null;
 });
+

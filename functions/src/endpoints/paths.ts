@@ -50,12 +50,16 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
     const all = await repo.find({topicUID: uid});
     let current: any;
 
-    const results = all.sort(compareValues('order', 'asc'));
+    let results = all.sort(compareValues('order', 'asc'));
 
     if (myTopics) {
         const topicIndex = myTopics.findIndex(t => t.UID === uid);
         if (topicIndex !== -1 && myTopics[topicIndex].lessons.length > 0) {
             myTopics[topicIndex].lessons.forEach((lesson, index) => {
+                if (lesson.mastered) {
+                    const masteredIndex = results.findIndex((l: any) => l.UID === lesson.UID);
+                    results[masteredIndex]['mastered'] = true;
+                }
                 if (!lesson.mastered) {
                     current = lesson;
                 } else if (myTopics[topicIndex].lessons.length-1 === index) {

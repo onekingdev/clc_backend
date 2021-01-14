@@ -6,8 +6,8 @@ export const prod = process.env.NODE_ENV === 'production';
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
-    host: '/cloudsql/chipleadercoaching-webapp:us-central1:clc',
-    //host:'127.0.0.1',
+    // host: '/cloudsql/chipleadercoaching-webapp:us-central1:clc',
+    host:'127.0.0.1',
     port: 3306,
     username: 'root',
     password: 'clc1234',

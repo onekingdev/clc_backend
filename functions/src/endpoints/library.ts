@@ -22,12 +22,6 @@ export const uploadLibrary = functions.https.onRequest(async (request, response)
     cors(request, response, async () => {
         const connection = await connect();
 
-        // drop
-        await connection.createQueryBuilder()
-            .delete()
-            .from(Library)
-            .execute()
-
         const repoLibrary = connection.getRepository(Library);
 
         const {library} = request.body;

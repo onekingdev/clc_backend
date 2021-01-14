@@ -201,27 +201,3 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
         response.send(user);
     })
 });
-
-
-
-
-
-export const check = functions.https.onRequest(async (request, response) => {
-    const connection = await connect();
-    const repo = connection.getRepository(Lessons);
-
-    const all = await repo.find();
-
-    response.send(all);
-});
-
-export const deleteTable = functions.https.onRequest(async (request, response) => {
-    const connection = await connect();
-
-    connection.createQueryBuilder()
-        .delete()
-        .from(Topics)
-        .execute()
-
-    response.send();
-});
