@@ -165,28 +165,6 @@ export const saveEarnings = functions.https.onRequest(async (request, response) 
 });
 
 
-/*export const getLessonData = async (uid: string, myTopics?: any) => {
-    const connection = await connect();
-    const repo = connection.getRepository(Lessons);
-
-    const all = await repo.find({topicUID: uid});
-    let current: any;
-
-    if (myTopics) {
-        const topicIndex = myTopics.findIndex(t => t.UID === uid);
-        if (topicIndex !== -1 && myTopics[topicIndex].lessons.length > 0) {
-            myTopics[topicIndex].lessons.forEach(lesson => {
-                if (!lesson.mastered) {
-                    current = lesson;
-                }
-            })
-        } else current = all[0]
-    } else current = all[0]
-
-
-    return {total:all.length, current, all};
-}*/
-
 export const levelUp = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
@@ -194,9 +172,11 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
 
         const {id} = request.body;
 
-        const user = await repo.findOne({id: id});
+        let user = await repo.findOne({id: id});
 
         user.masteredLevel += 1;
+
+        await repo.save(user);
 
         response.send(user);
     })

@@ -58,16 +58,15 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
             myTopics[topicIndex].lessons.forEach((lesson, index) => {
                 if (lesson.mastered) {
                     const masteredIndex = results.findIndex((l: any) => l.UID === lesson.UID);
-                    results[masteredIndex]['mastered'] = true;
-                }
-                if (!lesson.mastered) {
-                    current = lesson;
-                } else if (myTopics[topicIndex].lessons.length-1 === index) {
-                    current = results[index+1]
+                    if (masteredIndex !== -1) {
+                        results[masteredIndex]['mastered'] = true;
+                    }
                 }
             })
-        } else current = results[0]
-    } else current = results[0]
+        }
+    }
+
+    current = results[0];
 
     return {total:results.length, current, all: results};
 }
@@ -89,7 +88,7 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
             for (let i = 0; i < all.length; i++) {
                 const lessonData = await getLessonData(all[i].UID, myTopics);
 
-                if (myTopics.some(myTopic => myTopic.id === all[i].id && myTopic.mastered)) {
+                if (myTopics.some(myTopic => myTopic.UID === all[i].UID && myTopic.mastered)) {
                     all[i]['status'] = 2;
                     all[i]['lessonUID'] = lessonData.current.UID;
                     all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
@@ -97,7 +96,7 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
                     all[i]['allTopicLessons'] = lessonData.all;
                     all[i]['totalTopicLessons'] = lessonData.total;
                     mastered.push(all[i]);
-                } else if (myTopics.some(myTopic => myTopic.id === all[i].id && !myTopic.mastered) || all[i].chips === 0 && all[i].tickets === 0 && all[i].masteredLevel <= user.masteredLevel) {
+                } else if (myTopics.some(myTopic => myTopic.UID === all[i].UID && !myTopic.mastered) || all[i].chips === 0 && all[i].tickets === 0 && all[i].masteredLevel <= user.masteredLevel) {
                     all[i]['status'] = 1;
                     all[i]['lessonUID'] = lessonData.current.UID;
                     all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;

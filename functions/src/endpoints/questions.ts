@@ -20,14 +20,14 @@ export const uploadQuestions = functions.https.onRequest(async (request, respons
                 await repoTopics.save({...value, createdAt: new Date()});
             });
             const newLessons: Array<Object> = (lessons as Array<Object> || []).map(async (value: any) => {
-                await repoLessons.save({...value, createdAt: new Date(), topicID: newTopics[value.topicRow - 1]['id']});
+                await repoLessons.save({...value, createdAt: new Date(), topicUID: newTopics[value.topicRow - 1]['id']});
             });
 
             (questions as Array<Object> || []).map(async (value: any) => {
                 await repoQuestions.save({
                     ...value,
                     createdAt: new Date(),
-                    lessonID: newLessons[value.lessonRow - 1]['id']
+                    lessonUID: newLessons[value.lessonRow - 1]['id']
                 });
             });
 
