@@ -85,8 +85,22 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                     const allLessons = await repoLessons.find({topicUID: allTopics[i].UID});
                     const sortedLessons = allLessons.sort(compareValues('order', 'asc'));
 
-                    for (let j = 0; j < sortedLessons.length; j++) {
-                        const allQuestions = await repoQuestions.find({lessonUID: sortedLessons[j].UID});
+                    let newLessonList = [];
+
+                    if (myTopics[myTopicIndex]) {
+                        sortedLessons.forEach(lesson => {
+                            const lessonIndex = myTopics[myTopicIndex].lessons.findIndex((l: any) => l.UID === lesson.UID);
+                            if (newLessonList.length < 2 && lessonIndex === -1 || newLessonList.length < 2 && !myTopics[myTopicIndex].lessons[lessonIndex].mastered) {
+                                newLessonList.push(lesson);
+                            }
+                        })
+                    } else {
+                        newLessonList.push(sortedLessons[0]);
+                        newLessonList.push(sortedLessons[1]);
+                    }
+
+                    for (let j = 0; j < newLessonList.length; j++) {
+                        const allQuestions = await repoQuestions.find({lessonUID: newLessonList[j].UID});
 
                         for (let k = 0; k < allQuestions.length; k++) {
                             data.push({
@@ -100,16 +114,16 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                                     tickets: allTopics[i].tickets,
                                     status: 1,
                                     mastered: false,
-                                    lessonUID: sortedLessons[j].UID,
-                                    lessonName: sortedLessons[j].name,
-                                    rule: sortedLessons[j].rule,
-                                    totalTopicLessons: sortedLessons.length
+                                    lessonUID: newLessonList[j].UID,
+                                    lessonName: newLessonList[j].name,
+                                    rule: newLessonList[j].rule,
+                                    totalTopicLessons: newLessonList.length
                                 },
                                 question: {
                                     questionID: allQuestions[k].id,
                                     reward: allQuestions[k].reward,
                                     description: allQuestions[k].questionText,
-                                    header: sortedLessons[j].name,
+                                    header: newLessonList[j].name,
                                     questionNumber: k + 1,
                                     answers: [
                                         {
