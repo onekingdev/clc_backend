@@ -5,6 +5,7 @@ export * from './endpoints/game';
 export * from './endpoints/questions';
 export * from './endpoints/dropShit';
 export * from './endpoints/checkShit';
+export * from './endpoints/glossary';
 // @ts-ignore
 export * from './mail/welcome';
 // // Start writing Firebase Functions

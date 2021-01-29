@@ -25,7 +25,7 @@ export const vimeoDataExtractor = async (url: string) => {
 }
 
 export const parseHandHistory = (record: string) => {
-    const seatRegex = /Seat\s+[#?|\']?(?<seat_number>\d+)\'?:\s+(?<seat_name>[a-zA-Z0-9\s\']*)\s+\(\s*(?<seat_amount>\S+(\s+\S+)*)\s*\)/;
+    const seatRegex = /Seat\s+[#?|\']?(?<seat_number>\d+)\'?:\s+(?<seat_name>[a-zA-Z0-9!@#\$%\^\&*\)\(+=._/\-\s\']*)\s+\(\s*(?<seat_amount>\S+(\s+\S+)*)\s*\)/;
     const seatAmountRegex = /(?<seat_amount>(\d{1,3}(\,\d{1,3})*)*(\.\d{1,2})?)/;
     const flopRegex = /\*+\s+(?<description>\w+(\s+\w+)*)\s+\*+\s+\[\s*(?<cards_0>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\](\s+\[\s*(?<cards_1>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?(\s+\[\s*(?<cards_2>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?/
     const records = record.split("\n");
@@ -56,7 +56,7 @@ export const parseHandHistory = (record: string) => {
 
     const words = players.map(p => `\\b${p.name.replace(" ", "\\s+")}\\b`).join("|")
     const handRegex = new RegExp(`(?<seat_name>${words})\\:?\\s+(?<hand>[A-Za-z]+(\\s+[A-Za-z]+)*)(\\s*)\\[?(\\s*)(?<seat_amount>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?(\\s*)\\]?`)
-    const dealRegex = new RegExp(`\\bDealt\\b\\s+\\bto\\b\\s+(?<seat_name>${words})\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,| \\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*`)
+    const dealRegex = new RegExp(`\\bDealt\\b\\s+\\bto\\b\\s+(?<seat_name>${words})\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*`)
 
     let flopIndex = 0;
     let turnIndex = 0;
@@ -95,15 +95,7 @@ export const parseHandHistory = (record: string) => {
 
         if (result) {
             if (mapPlayers[result.seat_name]) {
-                result.cards = result.cards.trim();
                 mapPlayers[result.seat_name].cards = result.cards.split(/, | \s*/);
-                if (mapPlayers[result.seat_name].cards.length === 3) {
-                    mapPlayers[result.seat_name].cards[1] = mapPlayers[result.seat_name].cards[2];
-                    mapPlayers[result.seat_name].cards.pop();
-                }
-                if (mapPlayers[result.seat_name] && mapPlayers[result.seat_name].cards[1]) {
-                    mapPlayers[result.seat_name].cards[1] = mapPlayers[result.seat_name].cards[1].slice(mapPlayers[result.seat_name].cards[1].length - 5)
-                }
             }
         }
 

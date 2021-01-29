@@ -5,6 +5,7 @@ import {Lessons} from "../entities/Lessons";
 import {Questions} from "../entities/Questions";
 import {Library} from "../entities/Library";
 import {Users} from "../entities/Users";
+import {Glossary} from "../entities/Glossary";
 const cors = require('cors')({origin: true});
 
 export const dropTopics = functions.https.onRequest(async (request, response) => {
@@ -53,6 +54,19 @@ export const dropLibrary = functions.https.onRequest(async (request, response) =
         await connection.createQueryBuilder()
             .delete()
             .from(Library)
+            .execute()
+
+        response.send();
+    })
+});
+
+export const dropGlossary = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+
+        await connection.createQueryBuilder()
+            .delete()
+            .from(Glossary)
             .execute()
 
         response.send();
