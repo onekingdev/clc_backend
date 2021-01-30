@@ -11,10 +11,18 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
         const connection = await connect();
 
         const repoLibrary = connection.getRepository(Library);
-        response.send({
-            faq: await repoLibrary.find({type: 'faq'}),
-            usage: await repoLibrary.find({type: 'usage'})
-        });
+        const all = await repoLibrary.find();
+
+        let library = {}
+        all.forEach(item => {
+            if (item.type in library) {
+                library[item.type].push(item);
+            } else {
+                library[item.type] = [item];
+            }
+        })
+
+        response.send(library);
     });
 });
 
