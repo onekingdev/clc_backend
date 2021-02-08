@@ -24,5 +24,8 @@ export class Questions extends BaseEntity {
     reward: {chips: number, tickets: number};
 
     @Column()
+    assessment: number;
+
+    @Column()
     createdAt: Date;
 }
