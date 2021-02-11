@@ -9,6 +9,9 @@ export class Users extends BaseEntity {
     stringID: string;
 
     @Column()
+    assessment: boolean;
+
+    @Column()
     activationCodeID: number;
 
     @Column()

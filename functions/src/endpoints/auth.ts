@@ -48,6 +48,7 @@ export const createUser = functions.https.onRequest(async (request, response) =>
 
             const newUser = new Users();
             newUser.activationCodeID = code.id;
+            newUser.assessment = true;
             newUser.avatar = '';
             newUser.userName = userName;
             newUser.email = email;
