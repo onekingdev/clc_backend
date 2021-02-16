@@ -40,6 +40,7 @@ export const addActivationCode = functions.https.onRequest(async (request, respo
 
         all.forEach(item => {
             item.assessment = true;
+            item.payment = {id: '', created: 0, amount: 0, subscription: new Date()};
         })
 
         await connection.createQueryBuilder()
@@ -62,4 +63,30 @@ export const checkUsers = functions.https.onRequest(async (request, response) =>
 
         response.send(all);
     });
+});
+
+export const setAssessment = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+
+        let user = await repo.findOne({id: 58});
+
+        user.assessment = true;
+
+        await repo.save(user);
+
+        response.send(user);
+    })
+});
+
+
+export const checkUser = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+        const repoUsers = connection.getRepository(Users);
+        let user = await repoUsers.findOne({id: 58});
+
+        response.send(user);
+    })
 });

@@ -185,3 +185,12 @@ export const compareValues = (key: string, order = 'asc') => {
         );
     };
 }
+
+export const calculateOrderAmount = (items: {id: string}[]) => {
+    switch (items[0].id) {
+        case 'prod_ItM3Rl00ARmZwI':
+            return 100;
+        default:
+            return null;
+    }
+}

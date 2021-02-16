@@ -31,4 +31,12 @@ export class Users extends BaseEntity {
 
     @Column()
     createdAt: Date;
+
+    @Column("simple-json")
+    payment: {
+        id: string,
+        created: number,
+        amount: number,
+        subscription: Date
+    };
 }
