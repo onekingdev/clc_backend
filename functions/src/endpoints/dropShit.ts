@@ -4,8 +4,9 @@ import {Topics} from "../entities/Topics";
 import {Lessons} from "../entities/Lessons";
 import {Questions} from "../entities/Questions";
 import {Library} from "../entities/Library";
-import {Users} from "../entities/Users";
+// import {Users} from "../entities/Users";
 import {Glossary} from "../entities/Glossary";
+import {Events} from "../entities/Events";
 const cors = require('cors')({origin: true});
 
 export const dropTopics = functions.https.onRequest(async (request, response) => {
@@ -73,7 +74,20 @@ export const dropGlossary = functions.https.onRequest(async (request, response) 
     })
 });
 
-export const dropUsers = functions.https.onRequest(async (request, response) => {
+export const dropEvents = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+
+        await connection.createQueryBuilder()
+            .delete()
+            .from(Events)
+            .execute()
+
+        response.send();
+    })
+});
+
+/*export const dropUsers = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
 
@@ -84,4 +98,4 @@ export const dropUsers = functions.https.onRequest(async (request, response) => 
 
         response.send();
     })
-});
+});*/

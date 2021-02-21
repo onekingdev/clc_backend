@@ -16,12 +16,16 @@ export const vimeoDataExtractor = async (url: string) => {
             let data = {
                 title: res.data[0].title,
                 description: res.data[0].description,
-                image: res.data[0].thumbnail_large,
+                image: res.data[0].thumbnail_large ? res.data[0].thumbnail_large : '',
                 duration: res.data[0].duration,
             }
             return data;
         })
-        .catch(error => error)
+        .catch(error => {
+            return null;
+            //console.log(error)
+        })
+
 }
 
 export const parseHandHistory = (record: string) => {

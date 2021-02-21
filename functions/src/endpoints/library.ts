@@ -26,6 +26,17 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
     });
 });
 
+export const getWeeklyHandBreakdown = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+
+        const repo = connection.getRepository(Library);
+        const all = await repo.findOne({handBreakdown: 1});
+
+        response.send(all);
+    });
+});
+
 export const uploadLibrary = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
@@ -34,25 +45,27 @@ export const uploadLibrary = functions.https.onRequest(async (request, response)
 
         const {library} = request.body;
 
-
-        (library as Array<Object> || []).forEach(async (value: any) => {
+        for (let i = 0; i <= library.length -1; i++) {
             let data = {image: '', description: '', duration: '', title: ''};
-            if (new URL(value.url).host === 'vimeo.com' || new URL(value.url).host === 'player.vimeo.com') data = await vimeoDataExtractor(value.url);
-            else {
-                data['description'] = value.description;
-                data['image'] = value.image;
-                data['duration'] = value.duration;
-                data['title'] = value.title;
+            if (new URL(library[i].url).host === 'vimeo.com' || new URL(library[i].url).host === 'player.vimeo.com') {
+                data = await vimeoDataExtractor(library[i].url);
+            } else {
+                data['description'] = library[i].description;
+                data['image'] = library[i].image;
+                data['duration'] = library[i].duration;
+                data['title'] = library[i].title;
             }
-            await repoLibrary.save({
-                ...value,
-                title: data.title,
-                image: data.image,
-                description: data.description,
-                duration: data.duration,
-                createdAt: new Date()
-            });
-        });
+            if (data !== null) {
+                await repoLibrary.save({
+                    ...library[i],
+                    title: data.title,
+                    image: data.image,
+                    description: data.description,
+                    duration: data.duration,
+                    createdAt: new Date()
+                });
+            }
+        }
 
         response.send({success: 200})
     });

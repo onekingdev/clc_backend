@@ -21,7 +21,10 @@ export class Library extends BaseEntity {
     url: string;
 
     @Column()
-    type: string; // usage, faq
+    type: string;
+
+    @Column()
+    handBreakdown: number;
 
     @Column()
     createdAt: Date;

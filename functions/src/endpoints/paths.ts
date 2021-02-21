@@ -68,9 +68,10 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
 
     current = results[0];
 
-    return {total:results.length, current, all: results};
+    return {total: results.length, current, all: results};
 }
 
+//TODO: fix this shit!!!!!
 export const getPaths = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const {myTopics} = request.body;

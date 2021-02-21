@@ -7,6 +7,7 @@ export * from './endpoints/dropShit';
 export * from './endpoints/checkShit';
 export * from './endpoints/glossary';
 export * from './endpoints/payment';
+export * from './endpoints/events';
 export * from './endpoints/opened';
 // @ts-ignore
 export * from './mail/welcome';

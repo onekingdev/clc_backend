@@ -63,6 +63,7 @@ export const getQuestions = functions.https.onRequest(async (request, response) 
     })
 });
 
+// TODO: fix this shit!!!!!!
 export const getQuestionsAI = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const {myTopics, user} = request.body;
