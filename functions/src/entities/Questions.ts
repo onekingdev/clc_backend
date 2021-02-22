@@ -26,6 +26,6 @@ export class Questions extends BaseEntity {
     @Column()
     assessment: number;
 
-    @Column()
+    @Column({ default: () => `now()` })
     createdAt: Date;
 }

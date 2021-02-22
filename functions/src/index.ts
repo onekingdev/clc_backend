@@ -2,7 +2,6 @@ export * from './endpoints/auth';
 export * from './endpoints/library';
 export * from './endpoints/paths';
 export * from './endpoints/game';
-export * from './endpoints/questions';
 export * from './endpoints/dropShit';
 export * from './endpoints/checkShit';
 export * from './endpoints/glossary';

@@ -117,6 +117,7 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                                     mastered: false,
                                     lessonUID: newLessonList[j].UID,
                                     lessonName: newLessonList[j].name,
+                                    lessonDescription: newLessonList[j].description,
                                     rule: newLessonList[j].rule,
                                     totalTopicLessons: newLessonList.length
                                 },
@@ -182,6 +183,7 @@ export const getQuestionsAssessment = functions.https.onRequest(async (request, 
             .addSelect('t2.UID', 't2_UID')
             .addSelect('t2.name', 't2_name')
             .addSelect('t2.rule', 't2_rule')
+            .addSelect('t2.description', 't2_description')
             .innerJoin(Lessons, 't2', 't1.lessonUID = t2.UID')
             .innerJoin(Topics, 't3', 't2.topicUID = t3.UID')
             .where('t1.assessment = 1')
@@ -218,6 +220,7 @@ export const getQuestionsAssessment = functions.https.onRequest(async (request, 
                     mastered: false,
                     lessonUID: filteredQuestions[i]['t2_UID'],
                     lessonName: filteredQuestions[i]['t2_name'],
+                    lessonDescription: filteredQuestions[i]['t2_description'],
                     rule: all[i]['t2_rule'],
                     totalTopicLessons: filteredQuestions.length
                 },

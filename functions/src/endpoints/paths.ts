@@ -17,17 +17,9 @@ export const uploadContent = functions.https.onRequest(async (request, response)
 
         const {lessons, questions, topics} = request.body;
 
-        (topics as Array<Object> || []).forEach(async value => {
-            await repoTopics.save({...value, createdAt: new Date()});
-        });
-
-        (lessons as Array<Object> || []).forEach(async (value: any) => {
-            await repoLessons.save({...value, createdAt: new Date()});
-        });
-
-        (questions as Array<Object> || []).forEach(async (value: any) => {
-            await repoQuestions.save({...value, createdAt: new Date()});
-        });
+        await repoTopics.save(topics);
+        await repoLessons.save(lessons);
+        await repoQuestions.save(questions);
 
         response.send({success: 200})
     })

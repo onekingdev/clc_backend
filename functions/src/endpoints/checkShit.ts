@@ -2,13 +2,13 @@ import * as functions from "firebase-functions";
 import {connect} from "../config";
 import {ActivationCodes} from "../entities/ActivationCodes";
 import {Users} from "../entities/Users";
-import {Events} from "../entities/Events";
+import {Questions} from "../entities/Questions";
 const cors = require('cors')({origin: true});
 
 export const check = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
-        const repo = connection.getRepository(Events);
+        const repo = connection.getRepository(Questions);
 
         const all = await repo.find();
 

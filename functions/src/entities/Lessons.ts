@@ -17,9 +17,12 @@ export class Lessons extends BaseEntity {
     @Column()
     rule: string;
 
+    @Column('longtext')
+    description: string;
+
     @Column('int', {default: 0})
     order: number;
 
-    @Column()
+    @Column({ default: () => `now()` })
     createdAt: Date;
 }

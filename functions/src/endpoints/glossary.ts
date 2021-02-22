@@ -20,12 +20,7 @@ export const uploadGlossary = functions.https.onRequest(async (request, response
         const repoGlossary = connection.getRepository(Glossary);
         const {glossary} = request.body;
 
-        (glossary as Array<Object> || []).forEach(async (value: any) => {
-            await repoGlossary.save({
-                ...value,
-                createdAt: new Date()
-            });
-        });
+        await repoGlossary.save(glossary);
 
         response.send({success: 200})
     });

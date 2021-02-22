@@ -11,6 +11,6 @@ export class Glossary extends BaseEntity {
     @Column('longtext')
     definition: string;
 
-    @Column()
+    @Column({ default: () => `now()` })
     createdAt: Date;
 }

@@ -20,6 +20,6 @@ export class Topics extends BaseEntity {
     @Column()
     tickets: number;
 
-    @Column()
+    @Column({ default: () => `now()` })
     createdAt: Date;
 }
