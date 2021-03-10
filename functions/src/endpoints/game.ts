@@ -435,7 +435,7 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
         let user = await repo.findOne({id: id});
 
         user.masteredLevel += 1;
-        const index = user.path.availableTopics.findIndex(UID);
+        const index = user.path.availableTopics.findIndex((t: string) => t === UID);
         if (index !== -1) user.path.availableTopics.splice(index, 1);
         user.path.masteredTopics.push(UID);
 
@@ -449,7 +449,7 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
             .getRawMany()).map(t => t.topics_UID);
 
         allLocked.forEach(t => {
-            const index = user.path.lockedTopics.findIndex(t.UID);
+            const index = user.path.lockedTopics.findIndex((t: string) => t === UID);
             if (index === -1) return;
             user.path.lockedTopics.splice(index, 1);
             user.path.availableTopics.push(t.UID);
