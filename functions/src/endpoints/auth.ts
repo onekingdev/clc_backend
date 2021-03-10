@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import {connect} from '../config';
 import {Users} from '../entities/Users';
 import {ActivationCodes} from '../entities/ActivationCodes';
+import {Topics} from "../entities/Topics";
 const cors = require('cors')({origin: true});
 
 export const validateCode = functions.https.onRequest(async (request, response) => {
@@ -46,10 +47,26 @@ export const createUser = functions.https.onRequest(async (request, response) =>
                 }
             };
 
+            const allAvailable = (await connection
+                .createQueryBuilder(Topics, 'topics')
+                .select(['topics.UID'])
+                .where('topics.tickets = 0')
+                .andWhere('topics.chips = 0')
+                .andWhere('topics.masteredLevel <= 1')
+                .getRawMany()).map(t => t.topics_UID);
+
+            const allLocked = (await connection
+                .createQueryBuilder(Topics, 'topics')
+                .select(['topics.UID'])
+                .where('topics.masteredLevel > 1')
+                .orWhere('topics.tickets > 0')
+                .orWhere('topics.chips > 0')
+                .getRawMany()).map(t => t.topics_UID);
+
             const newUser = new Users();
             newUser.activationCodeID = code.id;
             newUser.assessment = true;
-            newUser.avatar = '';
+            newUser.avatar = 'S';
             newUser.userName = userName;
             newUser.email = email;
             newUser.type = type();
@@ -57,6 +74,7 @@ export const createUser = functions.https.onRequest(async (request, response) =>
             newUser.createdAt = new Date();
             newUser.stringID = stringID;
             newUser.payment = {id: '', created: 0, amount: 0, subscription: new Date()};
+            newUser.path = {availableTopics: allAvailable, lockedTopics: allLocked, masteredTopics: [], masteredLessons: []};
 
             const saved = await repoUsers.save(newUser);
 
@@ -87,5 +105,22 @@ export const getCodes = functions.https.onRequest(async (request, response) => {
         const all = await repo.find();
 
         response.send(all);
+    })
+});
+
+export const updateUser = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const {id, avatar, email} = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+
+        const all = await repo.findOne({id: id});
+
+        all.avatar = avatar;
+        all.email = email;
+
+        const saved = await repo.save(all);
+
+        response.send(saved);
     })
 });

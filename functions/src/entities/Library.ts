@@ -23,7 +23,7 @@ export class Library extends BaseEntity {
     @Column()
     type: string;
 
-    @Column()
+    @Column({type: "int", default: 0})
     handBreakdown: number;
 
     @Column()

@@ -87,7 +87,8 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
                     all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
                     all[i]['rule'] = lessonData.current.rule;
                     all[i]['allTopicLessons'] = lessonData.all;
-                    all[i]['totalTopicLessons'] = lessonData.total;
+                    all[i]['totalTopicLessons'] = lessonData.total;// TODO: estas variables los puedes meter en un quierybuilder
+                    all[i]['lessonDescription'] = lessonData.current.description;
                     mastered.push(all[i]);
                 } else if (myTopics.some(myTopic => myTopic.UID === all[i].UID && !myTopic.mastered) || all[i].chips === 0 && all[i].tickets === 0 && all[i].masteredLevel <= user.masteredLevel) {
                     all[i]['status'] = 1;
@@ -96,10 +97,12 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
                     all[i]['rule'] = lessonData.current.rule;
                     all[i]['allTopicLessons'] = lessonData.all;
                     all[i]['totalTopicLessons'] = lessonData.total;
+                    all[i]['lessonDescription'] = lessonData.current.description;
                     available.push(all[i]);
                 } else {
                     all[i]['status'] = 0;
                     all[i]['lessonName'] = lessonData.current.name ? lessonData.current.name : lessonData.current.lessonName;
+                    all[i]['lessonDescription'] = lessonData.current.description;
                     locked.push(all[i]);
                 }
             }
@@ -114,10 +117,12 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
                     all[i]['rule'] = lessonData.current.rule;
                     all[i]['allTopicLessons'] = lessonData.all;
                     all[i]['totalTopicLessons'] = lessonData.total;
+                    all[i]['lessonDescription'] = lessonData.current.description;
                     available.push(all[i]);
                 } else {
                     all[i]['status'] = 0;
                     all[i]['lessonName'] = lessonData.current.name;
+                    all[i]['lessonDescription'] = lessonData.current.description;
                     locked.push(all[i]);
                 }
             }
@@ -126,3 +131,14 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
         response.send({available, locked, mastered});
     })
 });
+
+/*
+exports.buyTopic = functions.database.ref('/users')
+    .onUpdate((change) => {
+        const before = change.before  // DataSnapshot before the change
+        const after = change.after  // DataSnapshot after the change
+
+        console.log(before, 'before ------------------------------')
+        console.log(after, 'after ------------------------------')
+    })
+ */

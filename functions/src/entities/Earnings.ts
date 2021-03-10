@@ -18,5 +18,11 @@ export class Earnings extends BaseEntity {
     chips: number;
 
     @Column()
+    challenge: number;
+
+    @Column()
+    correct: number;
+
+    @Column({ default: () => `now()` })
     createdAt: Date;
 }

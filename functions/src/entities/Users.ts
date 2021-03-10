@@ -33,6 +33,14 @@ export class Users extends BaseEntity {
     createdAt: Date;
 
     @Column("simple-json")
+    path: {
+        availableTopics: string[],
+        masteredTopics: string[],
+        masteredLessons: string[],
+        lockedTopics: string[]
+    }
+
+    @Column("simple-json")
     payment: {
         id: string,
         created: number,

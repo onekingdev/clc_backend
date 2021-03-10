@@ -29,6 +29,7 @@ export const vimeoDataExtractor = async (url: string) => {
 }
 
 export const parseHandHistory = (record: string) => {
+    if (record === '') return {noHandHistory: true};
     const seatRegex = /Seat\s+[#?|\']?(?<seat_number>\d+)\'?:\s+(?<seat_name>[a-zA-Z0-9!@#\$%\^\&*\)\(+=._/\-\s\']*)\s+\(\s*(?<seat_amount>\S+(\s+\S+)*)\s*\)/;
     const seatAmountRegex = /(?<seat_amount>(\d{1,3}(\,\d{1,3})*)*(\.\d{1,2})?)/;
     const flopRegex = /\*+\s+(?<description>\w+(\s+\w+)*)\s+\*+\s+\[\s*(?<cards_0>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\](\s+\[\s*(?<cards_1>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?(\s+\[\s*(?<cards_2>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?/

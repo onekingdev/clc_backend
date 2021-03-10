@@ -4,6 +4,7 @@ import firebase from "firebase";
 import {connect} from "../config";
 import {Users} from "../entities/Users";
 import {ActivationCodes} from "../entities/ActivationCodes";
+import {Topics} from "../entities/Topics";
 const timestamp = firebase.firestore.FieldValue.serverTimestamp();
 const cors = require('cors')({origin: true});
 
@@ -36,6 +37,22 @@ export const externalRegister = functions.https.onRequest(async (request, respon
                     }
                 };
 
+                const allAvailable = (await connection
+                    .createQueryBuilder(Topics, 'topics')
+                    .select(['topics.UID'])
+                    .where('topics.tickets = 0')
+                    .andWhere('topics.chips = 0')
+                    .andWhere('topics.masteredLevel <= 1')
+                    .getRawMany()).map(t => t.topics_UID);
+
+                const allLocked = (await connection
+                    .createQueryBuilder(Topics, 'topics')
+                    .select(['topics.UID'])
+                    .where('topics.masteredLevel > 1')
+                    .orWhere('topics.tickets > 0')
+                    .orWhere('topics.chips > 0')
+                    .getRawMany()).map(t => t.topics_UID);
+
                 const newUser = new Users();
                 newUser.activationCodeID = code.id;
                 newUser.assessment = true;
@@ -47,15 +64,16 @@ export const externalRegister = functions.https.onRequest(async (request, respon
                 newUser.createdAt = new Date();
                 newUser.stringID = user.stringID;
                 newUser.payment = {id: '', created: 0, amount: 0, subscription: new Date()};
+                newUser.path = {availableTopics: [...allAvailable], lockedTopics: [...allLocked], masteredTopics: [], masteredLessons: []};
 
                 await repoUsers.save(newUser);
 
                 await app
                     .firestore()
                     .collection('users')
-                    .doc(user.stringID)
+                    .doc(newUser.stringID)
                     .set({
-                        assessment: true,
+                        dailyChallenge: {questions: 10, counter: 0, days:[], lastUpdate: timestamp},
                         chips: 0,
                         tickets: 0,
                         myTopics: [{}],
@@ -64,10 +82,10 @@ export const externalRegister = functions.https.onRequest(async (request, respon
                 await app
                     .firestore()
                     .collection('earnings')
-                    .doc(user.stringID)
+                    .doc(newUser.stringID)
                     .set({
-                        avatar: '',
-                        userName: user.displayName,
+                        avatar: 'S',
+                        userName: newUser.userName,
                         season: {correct: 0, chips: 0, tickets: 0, started: timestamp},
                         week: {correct: 0, chips: 0, tickets: 0, started: timestamp},
                         month: {correct: 0, chips: 0, tickets: 0, started: timestamp},
@@ -80,6 +98,20 @@ export const externalRegister = functions.https.onRequest(async (request, respon
                             friday: {correct: 0, tickets: 0},
                             saturday: {correct: 0, tickets: 0},
                             sunday: {correct: 0, tickets: 0},
+                        },
+                        months: {
+                            december: {correct: 0, tickets: 0},
+                            january: {correct: 0, tickets: 0},
+                            february: {correct: 0, tickets: 0},
+                            march: {correct: 0, tickets: 0},
+                            april: {correct: 0, tickets: 0},
+                            may: {correct: 0, tickets: 0},
+                            june: {correct: 0, tickets: 0},
+                            july: {correct: 0, tickets: 0},
+                            august: {correct: 0, tickets: 0},
+                            september: {correct: 0, tickets: 0},
+                            october: {correct: 0, tickets: 0},
+                            november: {correct: 0, tickets: 0},
                         }
                     });
             }).catch(e => {

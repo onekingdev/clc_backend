@@ -1,9 +1,8 @@
 import * as functions from 'firebase-functions';
-import {LessThanOrEqual} from 'typeorm';
 import {connect} from '../config';
 import {Earnings} from "../entities/Earnings";
 import {Questions} from "../entities/Questions";
-import {compareValues, parseHandHistory} from "../helpers/parser";
+import {parseHandHistory} from "../helpers/parser";
 import {Lessons} from "../entities/Lessons";
 import {Topics} from "../entities/Topics";
 import {Users} from "../entities/Users";
@@ -63,109 +62,118 @@ export const getQuestions = functions.https.onRequest(async (request, response) 
     })
 });
 
-// TODO: fix this shit!!!!!!
 export const getQuestionsAI = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
-        const {myTopics, user} = request.body;
-
         const connection = await connect();
-        const repoTopics = connection.getRepository(Topics);
-        const repoLessons = connection.getRepository(Lessons);
-        const repoQuestions = connection.getRepository(Questions);
 
-        const allTopics = await repoTopics.find({
-            where: {masteredLevel: LessThanOrEqual(user.masteredLevel)}
-        });
+        const {user} = request.body;
+        const repo = connection.getRepository(Users);
+        let thisUser = await repo.findOne({id: user.id});
+
+        let all;
+        if (thisUser.path.masteredLessons.length > 0) {
+            all = await connection
+                .createQueryBuilder(Questions, 'questions')
+                .addSelect('topics.id', 'topics_id')
+                .addSelect('topics.UID', 'topics_UID')
+                .addSelect('topics.name', 'topics_name')
+                .addSelect('topics.chips', 'topics_chips')
+                .addSelect('topics.tickets', 'topics_tickets')
+                .addSelect('topics.masteredLevel', 'topics_masteredLevel')
+                .addSelect('lessons.UID', 'lessons_UID')
+                .addSelect('lessons.name', 'lessons_name')
+                .addSelect('lessons.rule', 'lessons_rule')
+                .addSelect('lessons.description', 'lessons_description')
+                .innerJoin(Lessons, 'lessons', 'questions.lessonUID = lessons.UID')
+                .innerJoin(Topics, 'topics', 'lessons.topicUID = topics.UID')
+                .where('topics.UID IN (:...availableTopics)')
+                .andWhere('lessons.UID NOT IN (:...masteredLessons)')
+                .setParameters({availableTopics: thisUser.path.availableTopics})
+                .setParameters({masteredLessons: thisUser.path.masteredLessons})
+                .limit(500)
+                .getRawMany()
+        } else {
+            all = await connection
+                .createQueryBuilder(Questions, 'questions')
+                .addSelect('topics.id', 'topics_id')
+                .addSelect('topics.UID', 'topics_UID')
+                .addSelect('topics.name', 'topics_name')
+                .addSelect('topics.chips', 'topics_chips')
+                .addSelect('topics.tickets', 'topics_tickets')
+                .addSelect('topics.masteredLevel', 'topics_masteredLevel')
+                .addSelect('lessons.UID', 'lessons_UID')
+                .addSelect('lessons.name', 'lessons_name')
+                .addSelect('lessons.rule', 'lessons_rule')
+                .addSelect('lessons.description', 'lessons_description')
+                .innerJoin(Lessons, 'lessons', 'questions.lessonUID = lessons.UID')
+                .innerJoin(Topics, 'topics', 'lessons.topicUID = topics.UID')
+                .where('topics.UID IN (:...availableTopics)')
+                .setParameters({availableTopics: thisUser.path.availableTopics})
+                .limit(500)
+                .getRawMany()
+        }
 
         let data = [];
 
-        for (let i = 0; i < allTopics.length; i++) {
-            const myTopicIndex = myTopics.findIndex(t => t.UID === allTopics[i].UID);
-            if (myTopicIndex !== -1 || allTopics[i].tickets === 0 && allTopics[i].chips === 0) {
-                if (myTopicIndex === -1 || !myTopics[myTopicIndex].mastered) {
-                    const allLessons = await repoLessons.find({topicUID: allTopics[i].UID});
-                    const sortedLessons = allLessons.sort(compareValues('order', 'asc'));
+        all.sort(() => .5 - Math.random());
 
-                    let newLessonList = [];
-
-                    if (myTopics[myTopicIndex]) {
-                        sortedLessons.forEach(lesson => {
-                            const lessonIndex = myTopics[myTopicIndex].lessons.findIndex((l: any) => l.UID === lesson.UID);
-                            if (newLessonList.length < 2 && lessonIndex === -1 || newLessonList.length < 2 && !myTopics[myTopicIndex].lessons[lessonIndex].mastered) {
-                                newLessonList.push(lesson);
-                            }
-                        })
-                    } else {
-                        newLessonList.push(sortedLessons[0]);
-                        newLessonList.push(sortedLessons[1]);
-                    }
-
-                    for (let j = 0; j < newLessonList.length; j++) {
-                        const allQuestions = await repoQuestions.find({lessonUID: newLessonList[j].UID});
-
-                        for (let k = 0; k < allQuestions.length; k++) {
-                            data.push({
-                                ...parseHandHistory(allQuestions[k].handHistory),
-                                topicData: {
-                                    id: allTopics[i].id,
-                                    UID: allTopics[i].UID,
-                                    name: allTopics[i].name,
-                                    masteredLevel: allTopics[i].masteredLevel,
-                                    chips: allTopics[i].chips,
-                                    tickets: allTopics[i].tickets,
-                                    status: 1,
-                                    mastered: false,
-                                    lessonUID: newLessonList[j].UID,
-                                    lessonName: newLessonList[j].name,
-                                    lessonDescription: newLessonList[j].description,
-                                    rule: newLessonList[j].rule,
-                                    totalTopicLessons: newLessonList.length
-                                },
-                                question: {
-                                    questionID: allQuestions[k].id,
-                                    reward: allQuestions[k].reward,
-                                    description: allQuestions[k].questionText,
-                                    header: newLessonList[j].name,
-                                    questionNumber: k + 1,
-                                    answers: [
-                                        {
-                                            correct: true,
-                                            text: allQuestions[k].answers.correct,
-                                            explanation: allQuestions[k].explanation.correct
-                                        },
-                                        {
-                                            correct: false,
-                                            text: allQuestions[k].answers.wrong1,
-                                            explanation: allQuestions[k].explanation.wrong
-                                        },
-                                        {
-                                            correct: false,
-                                            text: allQuestions[k].answers.wrong2,
-                                            explanation: allQuestions[k].explanation.wrong
-                                        },
-                                        {
-                                            correct: false,
-                                            text: allQuestions[k].answers.wrong3,
-                                            explanation: allQuestions[k].explanation.wrong
-                                        },
-                                        allQuestions[k].answers.wrong4 ? {
-                                            correct: false,
-                                            text: allQuestions[k].answers.wrong4,
-                                            explanation: allQuestions[k].explanation.wrong
-                                        } : {}
-                                    ]
-                                }
-                            })
-                        }
-                    }
+        for (let i = 0; i < 20; i++) {
+            data.push({
+                ...parseHandHistory(all[i]['questions_handHistory']),
+                topicData: {
+                    id: all[i]['topics_id'],
+                    UID: all[i]['topics_UID'],
+                    name: all[i]['topics_name'],
+                    masteredLevel: all[i]['topics_masteredLevel'],
+                    chips: all[i]['topics_chips'],
+                    tickets: all[i]['topics_tickets'],
+                    status: 1,
+                    mastered: false,
+                    lessonUID: all[i]['lessons_UID'],
+                    lessonName: all[i]['lessons_name'],
+                    lessonDescription: all[i]['lessons_description'],
+                    rule: all[i]['lessons_rule'],
+                    totalTopicLessons: all.length
+                },
+                question: {
+                    questionID: all[i]['questions_id'],
+                    reward: JSON.parse(all[i]['questions_reward']),
+                    description: all[i]['questions_questionText'],
+                    header: all[i]['lessons_name'],
+                    questionNumber: i+1,
+                    answers: [
+                        {
+                            correct: true,
+                            text: JSON.parse(all[i]['questions_answers']).correct,
+                            explanation: JSON.parse(all[i]['questions_explanation']).correct
+                        },
+                        {
+                            correct: false,
+                            text: JSON.parse(all[i]['questions_answers']).wrong1,
+                            explanation: JSON.parse(all[i]['questions_explanation']).wrong
+                        },
+                        {
+                            correct: false,
+                            text: JSON.parse(all[i]['questions_answers']).wrong2,
+                            explanation: JSON.parse(all[i]['questions_explanation']).wrong
+                        },
+                        {
+                            correct: false,
+                            text: JSON.parse(all[i]['questions_answers']).wrong3,
+                            explanation: JSON.parse(all[i]['questions_explanation']).wrong
+                        },
+                        JSON.parse(all[i]['questions_answers']).wrong4 ? {
+                            correct: false,
+                            text: JSON.parse(all[i]['questions_answers']).wrong4,
+                            explanation: JSON.parse(all[i]['questions_explanation']).wrong
+                        } : {}
+                    ]
                 }
-            }
+            })
         }
-
-        data.sort(() => .5 - Math.random());
         response.send(data);
     })
-});
+})
 
 export const getQuestionsAssessment = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
@@ -269,8 +277,7 @@ export const getQuestionsAssessment = functions.https.onRequest(async (request, 
 export const getQuestionsProgressbar = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
-        const repoQuestions = connection.getRepository(Questions);
-        const {type, myTopics, UID} = request.body;
+        const {type, myTopics, UID, user} = request.body;
 
         let all,
             progressIndex = 0,
@@ -299,8 +306,46 @@ export const getQuestionsProgressbar = functions.https.onRequest(async (request,
                     .getRawMany()
                 break;
 
-            case 'lesson':
-                all = await repoQuestions.find({lessonUID: UID});
+            case 'game':
+                all = await connection
+                    .createQueryBuilder(Questions, 't1')
+                    .addSelect('t3.id', 't3_id')
+                    .addSelect('t3.UID', 't3_UID')
+                    .addSelect('t3.name', 't3_name')
+                    .addSelect('t3.chips', 't3_chips')
+                    .addSelect('t3.tickets', 't3_tickets')
+                    .addSelect('t3.masteredLevel', 't3_masteredLevel')
+                    .addSelect('t2.UID', 't2_UID')
+                    .addSelect('t2.name', 't2_name')
+                    .addSelect('t2.rule', 't2_rule')
+                    .innerJoin(Lessons, 't2', 't1.lessonUID = t2.UID')
+                    .innerJoin(Topics, 't3', 't2.topicUID = t3.UID')
+                    .where('t2.UID = :lessonUID')
+                    .setParameters({ lessonUID: UID })
+                    .getRawMany()
+                break;
+
+            case 'ai':
+                all = await connection
+                    .createQueryBuilder(Earnings, 't0')
+                    .addSelect('t3.id', 't3_id')
+                    .addSelect('t3.UID', 't3_UID')
+                    .addSelect('t3.name', 't3_name')
+                    .addSelect('t3.chips', 't3_chips')
+                    .addSelect('t3.tickets', 't3_tickets')
+                    .addSelect('t3.masteredLevel', 't3_masteredLevel')
+                    .addSelect('t2.UID', 't2_UID')
+                    .addSelect('t2.name', 't2_name')
+                    .addSelect('t2.rule', 't2_rule')
+                    .addSelect('t1.id', 't1_id')
+                    .innerJoin(Questions, 't1', 't0.questionID = t1.id')
+                    .innerJoin(Lessons, 't2', 't1.lessonUID = t2.UID')
+                    .innerJoin(Topics, 't3', 't2.topicUID = t3.UID')
+                    .where('t0.challenge = 1')
+                    .andWhere('t0.createdAt >= CURDATE()')
+                    .andWhere('t0.userID = :userID')
+                    .setParameters({ userID: user.id })
+                    .getRawMany()
                 break;
         }
 
@@ -344,6 +389,18 @@ export const getQuestionsProgressbar = functions.https.onRequest(async (request,
             }
         })
 
+        if (type === 'ai') {
+            if (all.length < user.dailyChallenge.questions) {
+                for(let i = 0; i < user.dailyChallenge.questions - all.length; i++) {
+                    progressData.push({
+                        id: null,
+                        correct: null
+                    })
+                }
+            }
+            totalQuestions = progressData.length;
+        }
+
         response.send({
             progressIndex,
             ticketsEarned,
@@ -360,25 +417,43 @@ export const saveEarnings = functions.https.onRequest(async (request, response) 
         const connection = await connect();
         const repoEarnings = connection.getRepository(Earnings);
 
-        const {userID, questionID, tickets, chips} = request.body;
+        const {userID, questionID, tickets, chips, challenge, correct} = request.body;
 
-        await repoEarnings.save({userID, questionID, tickets, chips, createdAt: new Date()})
+        await repoEarnings.save({userID, questionID, tickets, chips, challenge, correct})
 
         response.send(200);
     })
 });
-
 
 export const levelUp = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
         const repo = connection.getRepository(Users);
 
-        const {id} = request.body;
+        const {id, UID} = request.body;
 
         let user = await repo.findOne({id: id});
 
         user.masteredLevel += 1;
+        const index = user.path.availableTopics.findIndex(UID);
+        if (index !== -1) user.path.availableTopics.splice(index, 1);
+        user.path.masteredTopics.push(UID);
+
+        const allLocked = (await connection
+            .createQueryBuilder(Topics, 'topics')
+            .select(['topics.UID'])
+            .where('topics.masteredLevel = :masteredLevel')
+            .andWhere('topics.tickets = 0')
+            .andWhere('topics.chips = 0')
+            .setParameters({ masteredLevel: 2 })
+            .getRawMany()).map(t => t.topics_UID);
+
+        allLocked.forEach(t => {
+            const index = user.path.lockedTopics.findIndex(t.UID);
+            if (index === -1) return;
+            user.path.lockedTopics.splice(index, 1);
+            user.path.availableTopics.push(t.UID);
+        })
 
         await repo.save(user);
 
@@ -400,5 +475,22 @@ export const finishAssessment = functions.https.onRequest(async (request, respon
         await repo.save(user);
 
         response.send(user);
+    })
+})
+
+export const updateMasteredLessons = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+
+        const {id, UID} = request.body;
+
+        let user = await repo.findOne({id: id});
+
+        user.path.masteredLessons.push(UID);
+
+        await repo.save(user);
+
+        response.send();
     })
 })

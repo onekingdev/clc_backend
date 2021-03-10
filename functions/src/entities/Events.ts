@@ -17,6 +17,6 @@ export class Events extends BaseEntity {
     @Column()
     link: string;
 
-    @Column()
+    @Column({type: "int", default: 0})
     spotlight: number;
 }
