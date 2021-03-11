@@ -62,6 +62,20 @@ export const getQuestions = functions.https.onRequest(async (request, response) 
     })
 });
 
+export const getTotalLessons = async (topicUID) => {
+    const connection = await connect();
+    let sum = await connection
+        .createQueryBuilder(Lessons, 'lessons')
+        .addSelect('topics.UID', 'topics_UID')
+        .addSelect('lessons.UID', 'lessons_UID')
+        .innerJoin(Topics, 'topics', 'lessons.topicUID = topics.UID')
+        .where('topics.UID = :UID')
+        .setParameters({UID: topicUID})
+        .getCount()
+
+    return sum;
+}
+
 export const getQuestionsAI = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
@@ -133,7 +147,7 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                     lessonName: all[i]['lessons_name'],
                     lessonDescription: all[i]['lessons_description'],
                     rule: all[i]['lessons_rule'],
-                    totalTopicLessons: all.length
+                    totalTopicLessons:  await getTotalLessons(all[i]['topics_UID'])
                 },
                 question: {
                     questionID: all[i]['questions_id'],
@@ -230,7 +244,7 @@ export const getQuestionsAssessment = functions.https.onRequest(async (request, 
                     lessonName: filteredQuestions[i]['t2_name'],
                     lessonDescription: filteredQuestions[i]['t2_description'],
                     rule: all[i]['t2_rule'],
-                    totalTopicLessons: filteredQuestions.length
+                    totalTopicLessons: 0
                 },
                 question: {
                     questionID: parseInt(filteredQuestions[i]['t1_id']),
