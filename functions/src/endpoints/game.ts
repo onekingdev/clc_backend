@@ -104,7 +104,7 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                 .andWhere('lessons.UID NOT IN (:...masteredLessons)')
                 .setParameters({availableTopics: thisUser.path.availableTopics})
                 .setParameters({masteredLessons: thisUser.path.masteredLessons})
-                .limit(500)
+                .limit(1000)
                 .getRawMany()
         } else {
             all = await connection
@@ -123,7 +123,7 @@ export const getQuestionsAI = functions.https.onRequest(async (request, response
                 .innerJoin(Topics, 'topics', 'lessons.topicUID = topics.UID')
                 .where('topics.UID IN (:...availableTopics)')
                 .setParameters({availableTopics: thisUser.path.availableTopics})
-                .limit(500)
+                .limit(1000)
                 .getRawMany()
         }
 
@@ -459,14 +459,14 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
             .where('topics.masteredLevel = :masteredLevel')
             .andWhere('topics.tickets = 0')
             .andWhere('topics.chips = 0')
-            .setParameters({ masteredLevel: 2 })
+            .setParameters({ masteredLevel: user.masteredLevel })
             .getRawMany()).map(t => t.topics_UID);
 
-        allLocked.forEach(t => {
-            const index = user.path.lockedTopics.findIndex((t: string) => t === UID);
+        allLocked.forEach(lockedUID => {
+            const index = user.path.lockedTopics.findIndex((t: string) => t === lockedUID);
             if (index === -1) return;
             user.path.lockedTopics.splice(index, 1);
-            user.path.availableTopics.push(t.UID);
+            user.path.availableTopics.push(lockedUID);
         })
 
         await repo.save(user);
