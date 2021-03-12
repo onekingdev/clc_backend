@@ -132,13 +132,40 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
     })
 });
 
-/*
-exports.buyTopic = functions.database.ref('/users')
-    .onUpdate((change) => {
-        const before = change.before  // DataSnapshot before the change
-        const after = change.after  // DataSnapshot after the change
+export const buyTopic = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+        const {UID, id} = request.body;
 
-        console.log(before, 'before ------------------------------')
-        console.log(after, 'after ------------------------------')
+        let user = await repo.findOne({id: id});
+
+
+        const index = user.path.availableTopics.findIndex((t: string) => t === UID);
+        if (index !== -1) user.path.availableTopics.splice(index, 1);
+
+        const allLocked = (await connection
+            .createQueryBuilder(Topics, 'topics')
+            .select(['topics.UID'])
+            .where('topics.UID = :UID')
+            .andWhere('topics.masteredLevel <= :masteredLevel')
+            .setParameters({ UID: UID })
+            .setParameters({ masteredLevel: user.masteredLevel })
+            .getRawMany()).map(t => t.topics_UID);
+
+        if (allLocked.length === 0) {
+            response.send({error: 405})
+        } else {
+            allLocked.forEach(lockedUID => {
+                const index = user.path.lockedTopics.findIndex((t: string) => t === lockedUID);
+                if (index === -1) return;
+                user.path.lockedTopics.splice(index, 1);
+                user.path.availableTopics.push(lockedUID);
+            })
+
+            await repo.save(user);
+
+            response.send(user);
+        }
     })
- */
+})

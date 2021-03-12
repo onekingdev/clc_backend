@@ -369,12 +369,13 @@ export const getQuestionsProgressbar = functions.https.onRequest(async (request,
                     .innerJoin(Lessons, 'lessons', 'questions.lessonUID = lessons.UID')
                     .innerJoin(Topics, 'topics', 'lessons.topicUID = topics.UID')
                     .where('earnings.challenge = 1')
-                    .andWhere('earnings.createdAt >= :date')
+                    .andWhere('earnings.createdAt >= CURDATE()')
                     .andWhere('earnings.userID = :userID')
                     .setParameters({ userID: user.id })
-                    .setParameters({ date: today})
+                    //.setParameters({ date: today})
                     .orderBy('earnings.createdAt', 'ASC')
                     .getRawMany()
+                console.log(today)
                 break;
         }
         if (type === 'ai') {
