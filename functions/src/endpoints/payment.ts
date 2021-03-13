@@ -24,6 +24,71 @@ export const paymentIntent = functions.https.onRequest(async (request, response)
     })
 })
 
+export const paymentSubscription = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const { email, paymentMethod } = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+
+        let user = await repo.findOne({email: email});
+
+        const customer = await stripe.customers.create({
+            payment_method: paymentMethod,
+            email: email,
+            invoice_settings: {
+                default_payment_method: paymentMethod,
+            },
+        });
+
+        const subscription = await stripe.subscriptions.create({
+            customer: customer.id,
+            items: [
+                {price: 'price_1IHZKzAT9ya87fpT4uf93joS'},
+            ],
+        });
+
+        user.payment = {subscriptionID: subscription['id']}
+
+        await repo.save(user);
+
+        const status = subscription['status'];
+        const client_secret = subscription['client_secret'];
+
+        response.send({'client_secret': client_secret, 'status': status})
+    })
+})
+
+export const updatePaymentDetails = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        //const { cardDetails } = request.body;
+
+
+    })
+})
+
+export const cancelSubscription = functions.https.onRequest(async (request, response) => {
+    cors(request, response, async () => {
+        const { id } = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+
+        let user = await repo.findOne({id: id});
+        const {subscriptionID} = user.payment;
+
+        const deleted = await stripe.subscriptions.del(subscriptionID);
+
+        if (deleted.status === 'canceled') {
+            user.payment = {
+                ...user.payment,
+                cancelled: true
+            }
+            await repo.save(user);
+        }
+
+        response.send(deleted)
+    })
+})
+
 export const stripeHook = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
 
@@ -40,8 +105,6 @@ export const stripeHook = functions.https.onRequest(async (request, response) =>
             return;
         }
 
-        // Handle Type of webhook
-
         const intent:any = event.data.object;
 
         switch (event.type) {
@@ -52,10 +115,11 @@ export const stripeHook = functions.https.onRequest(async (request, response) =>
                 let user = await repoUsers.findOne({email: intent.charges.data[0].billing_details.email});
 
                 user.payment = {
+                    ...user.payment,
                     id: intent.id,
                     created: intent.created,
                     amount: intent.amount,
-                    subscription: new Date(moment().add(30, 'days').format('YYYY/MM/DD'))
+                    subscription: new Date(moment().add(35, 'days').format('YYYY/MM/DD'))
                 };
 
                 await repoUsers.save(user);

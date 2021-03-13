@@ -194,7 +194,7 @@ export const compareValues = (key: string, order = 'asc') => {
 export const calculateOrderAmount = (items: {id: string}[]) => {
     switch (items[0].id) {
         case 'prod_ItM3Rl00ARmZwI':
-            return 100;
+            return 10000;
         default:
             return null;
     }
