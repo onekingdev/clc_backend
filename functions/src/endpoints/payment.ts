@@ -33,12 +33,17 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
         let user = await repo.findOne({email: email});
 
         const customer = await stripe.customers.create({
-            payment_method: paymentMethod,
+            payment_method: paymentMethod.id,
             email: email,
             invoice_settings: {
-                default_payment_method: paymentMethod,
+                default_payment_method: paymentMethod.id,
             },
         });
+
+       await stripe.paymentMethods.attach(
+            paymentMethod.id,
+            {customer: customer.id}
+        );
 
         const subscription = await stripe.subscriptions.create({
             customer: customer.id,
@@ -47,7 +52,21 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
             ],
         });
 
-        user.payment = {subscriptionID: subscription['id']}
+        if (customer.id && subscription.id && paymentMethod.id) {
+            user.payment = {
+                customerID: customer.id,
+                subscriptionID: subscription['id'],
+                paymentMethod: {
+                    id: paymentMethod.id,
+                    brand: paymentMethod.card.brand,
+                    expMonth: paymentMethod.card.exp_month,
+                    expYear: paymentMethod.card.exp_year,
+                    last4: paymentMethod.card.last4
+                }
+            }
+        } else {
+            response.send({'client_secret': null, 'status': 'error'})
+        }
 
         await repo.save(user);
 
@@ -60,9 +79,35 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
 
 export const updatePaymentDetails = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
-        //const { cardDetails } = request.body;
+        const { id, newPaymentMethod } = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
 
+        let user = await repo.findOne({id: id});
+        const {customerID, paymentMethod} = user.payment;
 
+        await stripe.paymentMethods.detach(
+            paymentMethod.id
+        );
+
+        const res = await stripe.paymentMethods.attach(
+            newPaymentMethod.id,
+            {customer: customerID}
+        );
+
+        const paymentDetails = {
+            id: newPaymentMethod.id,
+            brand: newPaymentMethod.card.brand,
+            expMonth: newPaymentMethod.card.exp_month,
+            expYear: newPaymentMethod.card.exp_year,
+            last4: newPaymentMethod.card.last4
+        }
+
+        user.payment.paymentMethod = paymentDetails;
+
+        await repo.save(user);
+
+        response.send(res);
     })
 })
 
@@ -80,7 +125,7 @@ export const cancelSubscription = functions.https.onRequest(async (request, resp
         if (deleted.status === 'canceled') {
             user.payment = {
                 ...user.payment,
-                cancelled: true
+                canceled: true
             }
             await repo.save(user);
         }
@@ -114,13 +159,15 @@ export const stripeHook = functions.https.onRequest(async (request, response) =>
 
                 let user = await repoUsers.findOne({email: intent.charges.data[0].billing_details.email});
 
-                user.payment = {
+                const payment = {
                     ...user.payment,
                     id: intent.id,
                     created: intent.created,
                     amount: intent.amount,
                     subscription: new Date(moment().add(35, 'days').format('YYYY/MM/DD'))
                 };
+
+                user.payment = payment;
 
                 await repoUsers.save(user);
 

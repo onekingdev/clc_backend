@@ -2,17 +2,27 @@ import * as functions from "firebase-functions";
 import {connect} from "../config";
 import {ActivationCodes} from "../entities/ActivationCodes";
 import {Users} from "../entities/Users";
-import {Earnings} from "../entities/Earnings";
+import Stripe from "stripe";
 const cors = require('cors')({origin: true});
+// @ts-ignore
+const stripe = new Stripe('sk_test_V09bhnBnCKBDwLD6gMha7WgG');
 
 export const check = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
-        const connection = await connect();
-        const repo = connection.getRepository(Earnings);
+        const subscriptionSchedule = await stripe.subscriptions.retrieve(
+            'sub_J7Z8SX1rzyPb6X'
+        );
+        /*const paymentMethod = await stripe.paymentMethods.attach(
+            'pm_1IVC6wAT9ya87fpTm4xn4I1C',
+            {customer: 'cus_J7Z8GHTRs4uccX'}
+        );
 
-        const all = await repo.find({challenge: 1});
+        const paymentMethods = await stripe.paymentMethods.list({
+            customer: 'cus_J7Qz9MByu4DMGz',
+            type: 'card',
+        });*/
 
-        response.send(all);
+        response.send(subscriptionSchedule);
     });
 });
 
