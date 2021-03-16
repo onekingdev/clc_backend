@@ -7,11 +7,13 @@ import {Users} from "../entities/Users";
 import {connect} from "../config";
 import moment = require("moment");
 import {sendSubscriptionEmail} from "../mail/payment";
+import {getStripeKey} from "../services/stripe";
+import {stripe_env} from "../config";
 
 const cors = require('cors')({origin: true});
 
 // @ts-ignore
-const stripe = new Stripe('sk_test_V09bhnBnCKBDwLD6gMha7WgG');
+const stripe = new Stripe(getStripeKey.stripe_secret(stripe_env));
 
 export const paymentIntent = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
@@ -48,7 +50,7 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
         const subscription = await stripe.subscriptions.create({
             customer: customer.id,
             items: [
-                {price: 'price_1IHZKzAT9ya87fpT4uf93joS'},
+                {price: getStripeKey.subscription_price(stripe_env)},
             ],
         });
 
@@ -139,7 +141,7 @@ export const stripeHook = functions.https.onRequest(async (request, response) =>
 
         const sig = request.headers['stripe-signature'];
 
-        const endpointSecret = 'whsec_PN7zX0x2NB093oANjDH9MgifE6ApxYqW';
+        const endpointSecret = getStripeKey.hook_secret(stripe_env);
 
         let event;
         try {
