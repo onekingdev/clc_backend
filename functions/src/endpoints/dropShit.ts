@@ -4,11 +4,10 @@ import {Topics} from "../entities/Topics";
 import {Lessons} from "../entities/Lessons";
 import {Questions} from "../entities/Questions";
 import {Library} from "../entities/Library";
-// import {Users} from "../entities/Users";
 import {Glossary} from "../entities/Glossary";
 import {Events} from "../entities/Events";
-import {Earnings} from "../entities/Earnings";
-import {Users} from "../entities/Users";
+// import {Earnings} from "../entities/Earnings";
+// import {Users} from "../entities/Users";
 const cors = require('cors')({origin: true});
 
 export const dropTopics = functions.https.onRequest(async (request, response) => {
@@ -89,7 +88,7 @@ export const dropEvents = functions.https.onRequest(async (request, response) =>
     })
 });
 
-export const dropUsers = functions.https.onRequest(async (request, response) => {
+/*export const dropUsers = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
 
@@ -113,4 +112,4 @@ export const dropEarnings = functions.https.onRequest(async (request, response) 
 
         response.send();
     })
-});
+});*/
