@@ -19,11 +19,11 @@ export const config: ConnectionOptions = {
 
     // Production Mode
     ...(prod && {
-        database: 'clc-production',
+        database: 'clc',
         logging: false,
         // synchronize: false,
         extra: {
-            socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc-production'
+            socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
         }
     }),
 }
