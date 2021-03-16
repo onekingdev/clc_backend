@@ -13,7 +13,6 @@ firebase-debug.log*
 .firebaserc
 firebase.json
 functions/src/endpoints/dropShit.ts
-functions/src/config.ts
 
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
