@@ -2,7 +2,7 @@ import {ConnectionOptions, Connection, createConnection, getConnection} from "ty
 import 'reflect-metadata';
 
 export const prod = process.env.NODE_ENV === 'production';
-export const stripe_env = 'production';
+export const stripe_env = 'dev';
 
 export const config: ConnectionOptions = {
     name: 'clc',
@@ -20,11 +20,11 @@ export const config: ConnectionOptions = {
 
     // Production Mode
     ...(prod && {
-        database: 'clc-production',
+        database: 'clc',
         logging: false,
         // synchronize: false,
         extra: {
-            socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc-production'
+            socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
         }
     }),
 }
