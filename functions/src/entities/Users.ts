@@ -48,6 +48,7 @@ export class Users extends BaseEntity {
         created?: number,
         amount?: number,
         subscription?: Date,
+        subscriptionType?: string,
         canceled?: boolean,
         paymentMethod?: {
             id: string,
