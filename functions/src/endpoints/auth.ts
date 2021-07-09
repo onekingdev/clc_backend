@@ -73,7 +73,7 @@ export const createUser = functions.https.onRequest(async (request, response) =>
             newUser.masteredLevel = 1;
             newUser.createdAt = new Date();
             newUser.stringID = stringID;
-            newUser.payment = {id: '', created: 0, amount: 0, subscriptionType:"", subscription: new Date()};
+            newUser.payment = {id: '', created: 0, amount: 0, subscription: new Date()};
             newUser.path = {availableTopics: allAvailable, lockedTopics: allLocked, masteredTopics: [], masteredLessons: []};
 
             const saved = await repoUsers.save(newUser);

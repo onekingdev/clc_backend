@@ -1,5 +1,5 @@
 import axios from "axios";
-require('dotenv').config();
+
 let URL = require('url').URL;
 
 export const vimeoDataExtractor = async (url: string) => {
@@ -193,7 +193,7 @@ export const compareValues = (key: string, order = 'asc') => {
 
 export const calculateOrderAmount = (items: {id: string}[]) => {
     switch (items[0].id) {
-        case String(process.env.PRODUCT_KEY):
+        case 'prod_ItM3Rl00ARmZwI':
             return 10000;
         default:
             return null;
