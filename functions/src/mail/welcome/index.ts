@@ -7,7 +7,7 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 
 const gmailEmail = 'customerservice@learnwithsocrates.com';
-const gmailPassword = 'itspphoogbcfzasb';
+const gmailPassword = 'itspphoogbcfzasb123';
 
 const mailTransport = nodemailer.createTransport({
     service: 'gmail',
