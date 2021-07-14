@@ -1,10 +1,9 @@
 // @ts-ignore
 const functions = require('firebase-functions');
-const fs=require('fs');
 const nodemailer = require('nodemailer');
 
 const gmailEmail = 'customerservice@learnwithsocrates.com';
-const gmailPassword = 'itspphoogbcfzasb123';
+const gmailPassword = 'scgzwwviuqsvcgds';
 
 const mailTransport = nodemailer.createTransport({
     service: 'gmail',
@@ -14,7 +13,7 @@ const mailTransport = nodemailer.createTransport({
     },
 });
 
-let htmlmail=fs.readFileSync("lib/mail/payment/paymentTemplate.html","utf-8").toString();
+let htmlmail='<p>Take our assessment and discover your stats</p>'
 
 export const sendSubscriptionEmail = (email: string) => {
     const recipent_email = email;

@@ -1,13 +1,12 @@
 // @ts-ignore
 const functions = require('firebase-functions');
 const admin = require("firebase-admin");
-const fs=require('fs');
 const nodemailer = require('nodemailer');
 
 admin.initializeApp();
 
 const gmailEmail = 'customerservice@learnwithsocrates.com';
-const gmailPassword = 'itspphoogbcfzasb123';
+const gmailPassword = 'scgzwwviuqsvcgds';
 
 const mailTransport = nodemailer.createTransport({
     service: 'gmail',
@@ -17,21 +16,21 @@ const mailTransport = nodemailer.createTransport({
     },
 });
 
-let htmlmail=fs.readFileSync("lib/mail/welcome/welcomeTemplate.html","utf-8").toString();
+let htmlmail="<p>Take our assessment and discover your stats</p>";
 
 exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
     const recipent_email = user.email;
-
+    const username = user.displayName;
     const mailOptions = {
         from: '"customerservice" <customerservice@learnwithsocrates.com>',
-        to: recipent_email,
+        to: `${username}, <${recipent_email}>`,
         subject: 'Welcome to Chip Leader Coaching AI',
         html: htmlmail
     };
 
     try {
         mailTransport.sendMail(mailOptions);
-        console.log('mail send');
+        console.log('mail sent!');
 
     } catch(error) {
         console.error('There was an error while sending the email:', error);

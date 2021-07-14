@@ -37,6 +37,5 @@ export const connect = async () => {
     } catch (e) {
         connection = await createConnection(config);
     }
-
     return connection;
 }
