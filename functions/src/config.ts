@@ -2,15 +2,15 @@ import {ConnectionOptions, Connection, createConnection, getConnection} from "ty
 import 'reflect-metadata';
 
 export const prod = process.env.NODE_ENV === 'production';
-export const stripe_env = 'production';
+export const stripe_env = 'dev';
 
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
-    host:'127.0.0.1',
+    host:'35.238.13.230',
     port: 3306,
-    username: 'root',
-    password: 'clc1234',
+    username: 'clcdevelopers',
+    password: 'Socrat3s!123',
     database: 'clc',
     synchronize: true,
     logging: false,

@@ -14,7 +14,6 @@ const cors = require('cors')({origin: true});
 
 // @ts-ignore
 const stripe = new Stripe(getStripeKey.stripe_secret(stripe_env));
-
 export const paymentIntent = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const { items } = request.body;
@@ -28,10 +27,10 @@ export const paymentIntent = functions.https.onRequest(async (request, response)
 
 export const paymentSubscription = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
-        const { email, paymentMethod } = request.body;
+        const { email, paymentMethod, subscriptionType } = request.body;
         const connection = await connect();
         const repo = connection.getRepository(Users);
-
+        
         let user = await repo.findOne({email: email});
 
         const customer = await stripe.customers.create({
@@ -50,7 +49,7 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
         const subscription = await stripe.subscriptions.create({
             customer: customer.id,
             items: [
-                {price: getStripeKey.subscription_price(stripe_env)},
+                {price: getStripeKey.subscription_price(stripe_env, subscriptionType)},
             ],
         });
 
@@ -58,6 +57,7 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
             user.payment = {
                 customerID: customer.id,
                 subscriptionID: subscription['id'],
+                subscriptionType: subscriptionType,
                 paymentMethod: {
                     id: paymentMethod.id,
                     brand: paymentMethod.card.brand,
