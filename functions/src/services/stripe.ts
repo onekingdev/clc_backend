@@ -11,22 +11,22 @@ export const getStripeKey = {
        {
             if(type === "CL AI")
             {
-                return String(process.env.PROD_PRICE_ONE);
+                return String(process.env.PROD_PRICE_ONE_KEY);
             }
             else
             {
-                return String(process.env.PROD_PRICE_TWO);
+                return String(process.env.PROD_PRICE_TWO_KEY);
             }
        }
        else
        {
             if(type === "CL AI")
             {
-                return String(process.env.DEV_PRICE_ONE);
+                return String(process.env.DEV_PRICE_ONE_KEY);
             }
             else
             {
-                return String(process.env.DEV_PRICE_TWO);
+                return String(process.env.DEV_PRICE_TWO_KEY);
             }
        }
         

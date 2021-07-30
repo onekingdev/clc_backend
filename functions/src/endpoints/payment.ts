@@ -30,7 +30,7 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
         const { email, paymentMethod, subscriptionType } = request.body;
         const connection = await connect();
         const repo = connection.getRepository(Users);
-        
+       
         let user = await repo.findOne({email: email});
 
         const customer = await stripe.customers.create({
@@ -52,7 +52,7 @@ export const paymentSubscription = functions.https.onRequest(async (request, res
                 {price: getStripeKey.subscription_price(stripe_env, subscriptionType)},
             ],
         });
-
+        
         if (customer.id && subscription.id && paymentMethod.id) {
             user.payment = {
                 customerID: customer.id,
