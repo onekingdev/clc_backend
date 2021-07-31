@@ -2,7 +2,7 @@ import {ConnectionOptions, Connection, createConnection, getConnection} from "ty
 import 'reflect-metadata';
 
 export const prod = process.env.NODE_ENV === 'production';
-export const stripe_env = 'development';
+export const stripe_env = 'dev';
 
 export const config: ConnectionOptions = {
     name: 'clc',

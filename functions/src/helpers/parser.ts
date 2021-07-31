@@ -124,7 +124,7 @@ export const parseHandHistory = (record: string) => {
             if (mapPlayers[result.seat_name].cards.length > 0) me = mapPlayers[result.seat_name];
             
            
-            if (result.hand.trim() === 'posts ante' || result.hand.trim() === 'posts the ante' || result.hand.trim() === 'posts big blind' || result.hand.trim() === 'posts the big blind' || result.hand.trim() === 'posts small blind' || result.hand.trim() === 'posts the small blind' || result.hand.trim() === 'calls' || result.hand.trim() === 'raises' || result.hand.trim() === 'checks' || result.hand.trim() === 'folds' || result.hand.trim() === 'bets') {
+            if (result.hand.trim() === 'posts ante' || result.hand.trim() === 'posts the ante' || result.hand.trim() === 'posts big blind' || result.hand.trim() === 'posts the big blind' || result.hand.trim() === 'posts small blind' || result.hand.trim() === 'posts the small blind' || result.hand.trim() === 'calls' || result.hand.trim() === 'raises' || result.hand.trim() === 'checks' || result.hand.trim() === 'folds' || result.hand.trim() === 'bets' || result.hand.trim() === 'is allIn') {
                 hands.push({
                     player: parseInt(mapPlayers[result.seat_name].number),
                     totalChips: mapPlayers[result.seat_name].initAmount,
