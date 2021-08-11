@@ -101,6 +101,7 @@ export const getQuestionsAI = functions.https.onRequest(
           .addSelect("lessons.name", "lessons_name")
           .addSelect("lessons.rule", "lessons_rule")
           .addSelect("lessons.description", "lessons_description")
+          .addSelect("questions.handNumber", "questions_handNumber")
           .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
           .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
           .where("topics.UID IN (:...availableTopics)")
@@ -122,6 +123,7 @@ export const getQuestionsAI = functions.https.onRequest(
           .addSelect("lessons.name", "lessons_name")
           .addSelect("lessons.rule", "lessons_rule")
           .addSelect("lessons.description", "lessons_description")
+          .addSelect("questions.handNumber", "questions_handNumber")
           .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
           .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
           .where("topics.UID IN (:...availableTopics)")
@@ -156,7 +158,7 @@ export const getQuestionsAI = functions.https.onRequest(
             questionID: all[i]["questions_id"],
             reward: JSON.parse(all[i]["questions_reward"]),
             description: all[i]["questions_questionText"],
-            header: all[i].handNumber,
+            header: all[i]["questions_handNumber"],
             questionNumber: i + 1,
             answers: [
               {
@@ -215,6 +217,7 @@ export const getQuestionsAssessment = functions.https.onRequest(
         .addSelect("lessons.name", "lessons_name")
         .addSelect("lessons.rule", "lessons_rule")
         .addSelect("lessons.description", "lessons_description")
+        .addSelect("questions.handNumber", "questions_handNumber")
         .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
         .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
         .where("questions.assessment = 1")
@@ -259,7 +262,7 @@ export const getQuestionsAssessment = functions.https.onRequest(
             questionID: parseInt(filteredQuestions[i]["questions_id"]),
             reward: JSON.parse(filteredQuestions[i]["questions_reward"]),
             description: filteredQuestions[i]["questions_questionText"],
-            header: filteredQuestions[i].all[i].handNumber,
+            header: filteredQuestions[i].all[i]["questions_handNumber"],
             questionNumber: i + 1,
             answers: [
               {
@@ -357,6 +360,7 @@ export const getQuestionsProgressbar = functions.https.onRequest(
             .addSelect("lessons.UID", "lessons_UID")
             .addSelect("lessons.name", "lessons_name")
             .addSelect("lessons.rule", "lessons_rule")
+            .addSelect("questions.handNumber", "questions_handNumber")
             .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
             .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
             .where("questions.assessment = 1")
@@ -375,6 +379,7 @@ export const getQuestionsProgressbar = functions.https.onRequest(
             .addSelect("lessons.UID", "lessons_UID")
             .addSelect("lessons.name", "lessons_name")
             .addSelect("lessons.rule", "lessons_rule")
+            .addSelect("questions.handNumber", "questions_handNumber")
             .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
             .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
             .where("lessons.UID = :lessonUID")
