@@ -1,31 +1,40 @@
-import {Entity, PrimaryGeneratedColumn, Column, BaseEntity} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 
 @Entity()
 export class Questions extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    lessonUID: string;
+  @Column()
+  lessonUID: string;
 
-    @Column()
-    questionText: string;
+  @Column()
+  handNumber: string;
 
-    @Column('longtext')
-    handHistory: string;
+  @Column()
+  questionText: string;
 
-    @Column("simple-json")
-    answers: { correct: string, wrong1: string, wrong2: string, wrong3: string, wrong4: string };
+  @Column("longtext")
+  handHistory: string;
 
-    @Column("simple-json")
-    explanation: { correct: string, wrong: string };
+  @Column("simple-json")
+  answers: {
+    correct: string;
+    wrong1: string;
+    wrong2: string;
+    wrong3: string;
+    wrong4: string;
+  };
 
-    @Column("simple-json")
-    reward: {chips: number, tickets: number};
+  @Column("simple-json")
+  explanation: { correct: string; wrong: string };
 
-    @Column()
-    assessment: number;
+  @Column("simple-json")
+  reward: { chips: number; tickets: number };
 
-    @Column({ default: () => `now()` })
-    createdAt: Date;
+  @Column()
+  assessment: number;
+
+  @Column({ default: () => `now()` })
+  createdAt: Date;
 }
