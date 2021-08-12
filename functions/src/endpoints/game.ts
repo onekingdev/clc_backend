@@ -262,7 +262,7 @@ export const getQuestionsAssessment = functions.https.onRequest(
             questionID: parseInt(filteredQuestions[i]["questions_id"]),
             reward: JSON.parse(filteredQuestions[i]["questions_reward"]),
             description: filteredQuestions[i]["questions_questionText"],
-            header: filteredQuestions[i].all[i]["questions_handNumber"],
+            header: all[i]["questions_handNumber"],
             questionNumber: i + 1,
             answers: [
               {
