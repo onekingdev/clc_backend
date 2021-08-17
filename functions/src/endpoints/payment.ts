@@ -13,7 +13,9 @@ import { stripe_env } from "../config";
 const cors = require("cors")({ origin: true });
 
 // @ts-ignore
-const stripe = new Stripe(getStripeKey.stripe_secret(stripe_env));
+const stripe = new Stripe(
+  "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"
+);
 export const paymentIntent = functions.https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
