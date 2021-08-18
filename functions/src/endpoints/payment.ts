@@ -57,18 +57,37 @@ export const paymentSubscription = functions.https.onRequest(
         today.getDay()
       );
 
-      const subscription = await stripe.subscriptions.create({
-        customer: customer.id,
-        items: [
-          {
-            price: getStripeKey.subscription_price(
-              stripe_env,
-              subscriptionType
-            ),
-          },
-        ],
-        trial_end: firstPaymentDate.getTime()
-      });
+      let subscription;
+
+      if (user.type === " free") {
+        subscription = await stripe.subscriptions
+          .create({
+            customer: customer.id,
+            items: [
+              {
+                price: getStripeKey.subscription_price(
+                  stripe_env,
+                  subscriptionType
+                ),
+              },
+            ],
+            trial_end: firstPaymentDate.getTime(),
+          })
+          .catch((err) => response.send(err));
+      } else {
+        subscription = await stripe.subscriptions.create({
+          customer: customer.id,
+          items: [
+            {
+              price: getStripeKey.subscription_price(
+                stripe_env,
+                subscriptionType
+              ),
+            },
+          ],
+        });
+      }
+
       if (customer.id && subscription.id && paymentMethod.id) {
         user.payment = {
           customerID: customer.id,
