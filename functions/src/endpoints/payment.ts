@@ -71,7 +71,7 @@ export const paymentSubscription = functions.https.onRequest(
             ],
             // trial_end: parseInt(`${new Date(futureMonth).getTime() / 1000}`)
             // trial_end: (Date.now() / 1000) + 7952400,
-            trial_period_days: 90
+            trial_period_days: 90,
           })
           .catch((err) => response.send(err));
       } else {
@@ -92,7 +92,10 @@ export const paymentSubscription = functions.https.onRequest(
         user.payment = {
           customerID: customer.id,
           subscriptionID: subscription["id"],
-          subscription: new Date(moment().add(35, "days").format("YYYY/MM/DD")),
+          subscription:
+            subscription.trial_end > 0
+              ? new Date(moment().add(125, "days").format("YYYY/MM/DD"))
+              : new Date(moment().add(35, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
             id: paymentMethod.id,
