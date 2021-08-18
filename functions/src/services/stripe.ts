@@ -7,13 +7,17 @@ export const getStripeKey = {
   },
   subscription_price: (env: string, type: string) => {
     if (env === "production") {
-      if (type === "CL AI") {
+      if (type == "CL TEST") {
+        return String("price_1JPdYgAT9ya87fpTBogwLuNz");
+      } else if (type === "CL AI") {
         return String("price_1JK37pAT9ya87fpTjdhp4YMc");
       } else {
         return String("price_1JK37pAT9ya87fpT2bvLdmi8");
       }
     } else {
-      if (type === "CL AI") {
+      if (type === "CL TEST") {
+        return String(process.env.DEV_PRICE_TEST);
+      } else if (type === "CL AI") {
         return String(process.env.DEV_PRICE_ONE_KEY);
       } else {
         return String(process.env.DEV_PRICE_TWO_KEY);
