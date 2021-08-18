@@ -50,6 +50,13 @@ export const paymentSubscription = functions.https.onRequest(
         customer: customer.id,
       });
 
+      const today = new Date();
+      const firstPaymentDate = new Date(
+        today.getFullYear(),
+        today.getMonth() + 3,
+        today.getDay()
+      );
+
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [
@@ -60,6 +67,7 @@ export const paymentSubscription = functions.https.onRequest(
             ),
           },
         ],
+        trial_end: firstPaymentDate.getTime()
       });
       if (customer.id && subscription.id && paymentMethod.id) {
         user.payment = {
