@@ -50,16 +50,14 @@ export const paymentSubscription = functions.https.onRequest(
         customer: customer.id,
       });
 
-      const today = new Date();
-      const firstPaymentDate = new Date(
-        today.getFullYear(),
-        today.getMonth() + 3,
-        today.getDay()
-      );
+      // const today = new Date();
+      // const firstPaymentDate = new Date(today.getFullYear(),today.getMonth() + 3,today.getDay());
+
+      // const futureMonth = moment().add(3, 'M').format('DD-MM-YYYY').unix();
 
       let subscription;
 
-      if (user.type === " free") {
+      if (user.type === "free") {
         subscription = await stripe.subscriptions
           .create({
             customer: customer.id,
@@ -71,7 +69,9 @@ export const paymentSubscription = functions.https.onRequest(
                 ),
               },
             ],
-            trial_end: firstPaymentDate.getTime(),
+            // trial_end: parseInt(`${new Date(futureMonth).getTime() / 1000}`)
+            // trial_end: (Date.now() / 1000) + 7952400,
+            trial_period_days: 90
           })
           .catch((err) => response.send(err));
       } else {
