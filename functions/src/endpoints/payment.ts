@@ -94,7 +94,7 @@ export const paymentSubscription = functions.https.onRequest(
           subscriptionID: subscription["id"],
           subscription:
             subscription.trial_end > 0
-              ? new Date(moment().add(125, "days").format("YYYY/MM/DD"))
+              ? new Date(moment().add(90, "days").format("YYYY/MM/DD"))
               : new Date(moment().add(35, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
