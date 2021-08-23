@@ -57,7 +57,7 @@ export const paymentSubscription = functions.https.onRequest(
 
       let subscription;
 
-      if (user.type === "free") {
+      if (user.type === "closer") {
         subscription = await stripe.subscriptions
           .create({
             customer: customer.id,
