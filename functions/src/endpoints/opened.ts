@@ -35,6 +35,8 @@ export const externalRegister = functions.https.onRequest(
                 return "tester";
               case "CLOSER":
                 return "closer";
+              case "FREE":
+                return "free";
               default:
                 return "free";
             }
