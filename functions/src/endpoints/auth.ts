@@ -49,7 +49,7 @@ export const createUser = functions.https.onRequest(
               return "tester";
             case "CLOSER":
               return "closer";
-            case "FREE":
+            case "EARLYADOPTER":
               return "free";
             default:
               return "free";
