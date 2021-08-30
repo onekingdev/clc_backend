@@ -78,7 +78,7 @@ export const createUser = functions.https.onRequest(
 
         const newUser = new Users();
         newUser.activationCodeID = code.id;
-        newUser.assessment = true;
+        newUser.assessment = code.isAssessment ? true : false;
         newUser.avatar = "S";
         newUser.userName = userName;
         newUser.email = email;
