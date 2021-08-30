@@ -40,9 +40,7 @@ export const getWeeklyHandBreakdown = functions.https.onRequest(async (request, 
 export const uploadLibrary = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
-
         const repoLibrary = connection.getRepository(Library);
-
         const {library} = request.body;
 
         for (let i = 0; i <= library.length -1; i++) {

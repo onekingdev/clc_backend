@@ -13,4 +13,10 @@ export class ActivationCodes extends BaseEntity {
 
     @Column()
     createdAt: Date;
+
+    @Column()
+    trailDays: number;
+
+    @Column()
+    role: string;
 }

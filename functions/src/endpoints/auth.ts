@@ -52,7 +52,7 @@ export const createUser = functions.https.onRequest(
             case "EARLYADOPTER":
               return "free";
             default:
-              return "free";
+              return "regular";
           }
         };
 
@@ -78,7 +78,7 @@ export const createUser = functions.https.onRequest(
 
         const newUser = new Users();
         newUser.activationCodeID = code.id;
-        newUser.assessment = code.code === "ASSESSMENT" ? true : false;
+        newUser.assessment = true;
         newUser.avatar = "S";
         newUser.userName = userName;
         newUser.email = email;
