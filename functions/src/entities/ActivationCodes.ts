@@ -1,25 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
+import {Entity, PrimaryGeneratedColumn, Column, BaseEntity} from 'typeorm';
 
 @Entity()
 export class ActivationCodes extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-  @Column()
-  code: string;
+    @Column()
+    code: string;
 
-  @Column()
-  active: boolean;
+    @Column()
+    active: boolean;
 
-  @Column()
-  createdAt: Date;
+    @Column()
+    createdAt: Date;
 
-  @Column()
-  trailDays: number;
+    @Column()
+    trailDays: number;
 
-  @Column()
-  role: string;
+    @Column()
+    role: string;
 
-  @Column()
-  isAssessment: boolean;
+    @Column()
+    isAssessment: boolean;
 }
