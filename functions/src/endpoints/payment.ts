@@ -9,6 +9,7 @@ import moment = require("moment");
 import { sendSubscriptionEmail } from "../mail/payment";
 import { getStripeKey } from "../services/stripe";
 import { stripe_env } from "../config";
+import { ActivationCodes } from "../entities/ActivationCodes";
 
 const cors = require("cors")({ origin: true });
 
@@ -35,8 +36,10 @@ export const paymentSubscription = functions.https.onRequest(
       const { email, paymentMethod, subscriptionType } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
+      const codes = connection.getRepository(ActivationCodes);
 
       let user = await repo.findOne({ email: email });
+      let code = await codes.findOne({ id: user.activationCodeID });
 
       const customer = await stripe.customers.create({
         payment_method: paymentMethod.id,
@@ -52,12 +55,12 @@ export const paymentSubscription = functions.https.onRequest(
 
       // const today = new Date();
       // const firstPaymentDate = new Date(today.getFullYear(),today.getMonth() + 3,today.getDay());
-
       // const futureMonth = moment().add(3, 'M').format('DD-MM-YYYY').unix();
 
       let subscription;
+      code.trailDays > 0
 
-      if (user.type === "closer") {
+      if (code.trailDays > 0) {
         subscription = await stripe.subscriptions
           .create({
             customer: customer.id,
@@ -71,7 +74,7 @@ export const paymentSubscription = functions.https.onRequest(
             ],
             // trial_end: parseInt(`${new Date(futureMonth).getTime() / 1000}`)
             // trial_end: (Date.now() / 1000) + 7952400,
-            trial_period_days: 90,
+            trial_period_days: code.trailDays,
           })
           .catch((err) => response.send(err));
       } else {
