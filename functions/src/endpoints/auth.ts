@@ -76,9 +76,13 @@ export const createUser = functions.https.onRequest(
             .getRawMany()
         ).map((t) => t.topics_UID);
 
+        console.log('##### code is assessment ######')
+        console.log(code.isAssessment)
+        console.log('###############################')
+
         const newUser = new Users();
         newUser.activationCodeID = code.id;
-        newUser.assessment = code.isAssessment;
+        newUser.assessment = code.isAssessment ? true : false;
         newUser.avatar = "S";
         newUser.userName = userName;
         newUser.email = email;
@@ -100,7 +104,15 @@ export const createUser = functions.https.onRequest(
           masteredLessons: [],
         };
 
+        console.log('##### new user object ######')
+        console.table(newUser)
+        console.log('############################')
+
         const saved = await repoUsers.save(newUser);
+
+        console.log('##### saved user in db ######')
+        console.table(saved)
+        console.log('############################')
 
         response.send(saved);
       } catch (e) {
