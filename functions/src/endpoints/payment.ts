@@ -53,10 +53,6 @@ export const paymentSubscription = functions.https.onRequest(
         customer: customer.id,
       });
 
-      // const today = new Date();
-      // const firstPaymentDate = new Date(today.getFullYear(),today.getMonth() + 3,today.getDay());
-      // const futureMonth = moment().add(3, 'M').format('DD-MM-YYYY').unix();
-
       let subscription;
       code.trailDays > 0
 
@@ -72,8 +68,6 @@ export const paymentSubscription = functions.https.onRequest(
                 ),
               },
             ],
-            // trial_end: parseInt(`${new Date(futureMonth).getTime() / 1000}`)
-            // trial_end: (Date.now() / 1000) + 7952400,
             trial_period_days: code.trailDays,
           })
           .catch((err) => response.send(err));
@@ -96,9 +90,9 @@ export const paymentSubscription = functions.https.onRequest(
           customerID: customer.id,
           subscriptionID: subscription["id"],
           subscription:
-            subscription.trial_end > 0
-              ? new Date(moment().add(90, "days").format("YYYY/MM/DD"))
-              : new Date(moment().add(35, "days").format("YYYY/MM/DD")),
+            code.trailDays > 0
+              ? new Date(moment().add(code.trailDays, "days").format("YYYY/MM/DD"))
+              : new Date(moment().add(30, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
             id: paymentMethod.id,
