@@ -105,7 +105,7 @@ export const getQuestionsAI = functions.https.onRequest(
         .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
         .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
         .where("topics.UID IN (:...availableTopics)")
-        .andWhere("lessons.UID NOT IN (:...masteredLessons)")
+        .andWhere("lessons.UID IN (:...masteredLessons)")
         .setParameters({ availableTopics: thisUser.path.availableTopics })
         .setParameters({ masteredLessons: thisUser.path.masteredLessons })
         .limit(1000)
