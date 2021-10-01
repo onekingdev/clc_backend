@@ -88,7 +88,29 @@ export const getQuestionsAI = functions.https.onRequest(
       let thisUser = await repo.findOne({ id: user.id });
 
       let all;
-      if (thisUser.path.masteredLessons.length > 0) {
+      //if (thisUser.path.masteredLessons.length > 0) {
+      all = await connection
+        .createQueryBuilder(Questions, "questions")
+        .addSelect("topics.id", "topics_id")
+        .addSelect("topics.UID", "topics_UID")
+        .addSelect("topics.name", "topics_name")
+        .addSelect("topics.chips", "topics_chips")
+        .addSelect("topics.tickets", "topics_tickets")
+        .addSelect("topics.masteredLevel", "topics_masteredLevel")
+        .addSelect("lessons.UID", "lessons_UID")
+        .addSelect("lessons.name", "lessons_name")
+        .addSelect("lessons.rule", "lessons_rule")
+        .addSelect("lessons.description", "lessons_description")
+        .addSelect("questions.handNumber", "questions_handNumber")
+        .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
+        .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
+        .where("topics.UID IN (:...availableTopics)")
+        .andWhere("lessons.UID NOT IN (:...masteredLessons)")
+        .setParameters({ availableTopics: thisUser.path.availableTopics })
+        .setParameters({ masteredLessons: thisUser.path.masteredLessons })
+        .limit(1000)
+        .getRawMany();
+      /* } else {
         all = await connection
           .createQueryBuilder(Questions, "questions")
           .addSelect("topics.id", "topics_id")
@@ -105,32 +127,10 @@ export const getQuestionsAI = functions.https.onRequest(
           .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
           .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
           .where("topics.UID IN (:...availableTopics)")
-          .andWhere("lessons.UID NOT IN (:...masteredLessons)")
-          .setParameters({ availableTopics: thisUser.path.availableTopics })
-          .setParameters({ masteredLessons: thisUser.path.masteredLessons })
-          .limit(1000)
-          .getRawMany();
-      } else {
-        all = await connection
-          .createQueryBuilder(Questions, "questions")
-          .addSelect("topics.id", "topics_id")
-          .addSelect("topics.UID", "topics_UID")
-          .addSelect("topics.name", "topics_name")
-          .addSelect("topics.chips", "topics_chips")
-          .addSelect("topics.tickets", "topics_tickets")
-          .addSelect("topics.masteredLevel", "topics_masteredLevel")
-          .addSelect("lessons.UID", "lessons_UID")
-          .addSelect("lessons.name", "lessons_name")
-          .addSelect("lessons.rule", "lessons_rule")
-          .addSelect("lessons.description", "lessons_description")
-          .addSelect("questions.handNumber", "questions_handNumber")
-          .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
-          .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
-          .where("topics.UID IN (:...availableTopics)")
           .setParameters({ availableTopics: thisUser.path.availableTopics })
           .limit(1000)
           .getRawMany();
-      }
+      }*/
 
       let data = [];
 
