@@ -24,6 +24,7 @@ export const paymentIntent = functions.https.onRequest(
       const paymentIntent = await stripe.paymentIntents.create({
         amount: calculateOrderAmount(items),
         currency: "usd",
+        statement_descriptor_suffix: 'CLAI',
       });
       response.send({ clientSecret: paymentIntent.client_secret });
     });
