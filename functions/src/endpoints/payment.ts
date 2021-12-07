@@ -36,20 +36,25 @@ export const paymentSubscription = functions.https.onRequest(
     cors(request, response, async () => {
       const { email, paymentMethod, subscriptionType } = request.body;
       const connection = await connect();
+
       const repo = connection.getRepository(Users);
       const codes = connection.getRepository(ActivationCodes);
 
       let user = await repo.findOne({ email: email });
       let code = await codes.findOne({ id: user.activationCodeID });
-
-      const customer = await stripe.customers.create({
+      let customer;
+      try{
+        customer = await stripe.customers.create({
         payment_method: paymentMethod.id,
         email: email,
         invoice_settings: {
           default_payment_method: paymentMethod.id,
         },
       });
+      } catch (err) {
+        response.send({ client_secret: null, status: "invalid_creditcard" });
 
+      } 
       await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: customer.id,
       });
@@ -72,6 +77,7 @@ export const paymentSubscription = functions.https.onRequest(
             trial_period_days: code.trailDays,
           })
           .catch((err) => response.send(err));
+          
       } else {
         subscription = await stripe.subscriptions.create({
           customer: customer.id,
@@ -84,8 +90,8 @@ export const paymentSubscription = functions.https.onRequest(
             },
           ],
         });
-      }
 
+      }
       if (customer.id && subscription.id && paymentMethod.id) {
         user.payment = {
           customerID: customer.id,
@@ -106,7 +112,6 @@ export const paymentSubscription = functions.https.onRequest(
       } else {
         response.send({ client_secret: null, status: "error" });
       }
-
       await repo.save(user);
 
       const status = subscription["status"];
