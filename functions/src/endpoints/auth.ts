@@ -125,7 +125,6 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
 export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
-console.log("env : ", process.env.NODE_ENV, process.env.STRIPE_PRODUCTION_KEY,process.env.STRIPE_DEVELOPMENT_KEY);
 
       const { email } = request.body;
       const connection = await connect();

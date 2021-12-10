@@ -6,7 +6,7 @@ export const prod = process.env.NODE_ENV === 'production';
 export const stripe_env = process.env.NODE_ENV;
 
 
-/*-------------------- Production database -S-----------------------*
+/*-------------------- Production database -S-----------------------*/
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
@@ -33,7 +33,7 @@ export const config: ConnectionOptions = {
 }
 /*-------------------- Production database -E-----------------------*/
 
-/*-------------------- Dev database -S-----------------------*/
+/*-------------------- Dev database -S-----------------------*
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
@@ -48,7 +48,7 @@ export const config: ConnectionOptions = {
         'lib/entities/*.js'
     ],
 
-    // Production Mode
+    // Dev Mode
     ...(prod && {
         database: 'clc',
         logging: false,
