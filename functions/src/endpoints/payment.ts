@@ -64,8 +64,8 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       });
 
       let subscription;
-
-      if (code.trailDays > 0) {
+      console.log("user.payment.canceled ", user.payment.canceled )
+      if (code.trailDays > 0 && user.payment.canceled == null) {
 
         subscription = await stripe.subscriptions
           .create({
@@ -102,7 +102,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           customerID: customer.id,
           subscriptionID: subscription["id"],
           subscription:
-            code.trailDays > 0
+            code.trailDays > 0 && user.payment.canceled == null
               ? new Date(moment().add(code.trailDays, "days").format("YYYY/MM/DD"))
               : new Date(moment().add(30, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
@@ -113,6 +113,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
             expYear: paymentMethod.card.exp_year,
             last4: paymentMethod.card.last4,
           },
+          canceled: user.payment.canceled
         };
       } else {
         response.send({ client_secret: null, status: "error" });
