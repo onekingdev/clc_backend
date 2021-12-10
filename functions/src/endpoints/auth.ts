@@ -1,11 +1,11 @@
 import * as functions from "firebase-functions";
-import { connect } from "../config";
+import { connect, runtimeOpts } from "../config";
 import { Users } from "../entities/Users";
 import { ActivationCodes } from "../entities/ActivationCodes";
 import { Topics } from "../entities/Topics";
 const cors = require("cors")({ origin: true });
 
-export const validateCode = functions.https.onRequest(
+export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const { activationCode } = request.body;
@@ -26,7 +26,7 @@ export const validateCode = functions.https.onRequest(
   }
 );
 
-export const createUser = functions.https.onRequest(
+export const createUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const { activationCode, email, userName, stringID } = request.body;
@@ -122,9 +122,11 @@ export const createUser = functions.https.onRequest(
   }
 );
 
-export const getUserByEmail = functions.https.onRequest(
+export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
+console.log("env : ", process.env.NODE_ENV, process.env.STRIPE_PRODUCTION_KEY,process.env.STRIPE_DEVELOPMENT_KEY);
+
       const { email } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
@@ -136,7 +138,7 @@ export const getUserByEmail = functions.https.onRequest(
   }
 );
 
-export const getCodes = functions.https.onRequest(async (request, response) => {
+export const getCodes = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
   cors(request, response, async () => {
     const connection = await connect();
     const repo = connection.getRepository(ActivationCodes);
@@ -147,18 +149,19 @@ export const getCodes = functions.https.onRequest(async (request, response) => {
   });
 });
 
-export const updateUser = functions.https.onRequest(
+export const updateUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
+      console.log("start update user")
       const { id, avatar, email } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
-
+      console.log("repo conected")
       const all = await repo.findOne({ id: id });
-
+      console.log(all);
       all.avatar = avatar;
       all.email = email;
-
+      console.log("will save");
       const saved = await repo.save(all);
 
       response.send(saved);

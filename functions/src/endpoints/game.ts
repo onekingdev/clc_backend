@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { connect } from "../config";
+import { connect, runtimeOpts } from "../config";
 import { Earnings } from "../entities/Earnings";
 import { Questions } from "../entities/Questions";
 import { parseHandHistory } from "../helpers/parser";
@@ -78,7 +78,7 @@ export const getTotalLessons = async (topicUID) => {
     .getCount();
 };
 
-export const getQuestionsAI = functions.https.onRequest(
+export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const connection = await connect();
@@ -86,9 +86,12 @@ export const getQuestionsAI = functions.https.onRequest(
       const { user } = request.body;
       const repo = connection.getRepository(Users);
       let thisUser = await repo.findOne({ id: user.id });
-
       let all;
+      console.log("changed")
+      console.log(...thisUser.path.availableTopics, "sec ",...thisUser.path.masteredLessons)
       //if (thisUser.path.masteredLessons.length > 0) {
+        
+        // console.log("query is ",query);
       all = await connection
         .createQueryBuilder(Questions, "questions")
         .addSelect("topics.id", "topics_id")
@@ -105,11 +108,13 @@ export const getQuestionsAI = functions.https.onRequest(
         .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
         .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
         .where("topics.UID IN (:...availableTopics)")
-        .andWhere("lessons.UID IN (:...masteredLessons)")
+        .andWhere("lessons.UID NOT IN (:...masteredLessons)")
         .setParameters({ availableTopics: thisUser.path.availableTopics })
-        .setParameters({ masteredLessons: thisUser.path.masteredLessons })
+        .setParameters({ masteredLessons: thisUser.path.masteredLessons.length > 0 ? thisUser.path.masteredLessons : "" })
         .limit(1000)
+        // .getSql();
         .getRawMany();
+        console.log(all);
       /* } else {
         all = await connection
           .createQueryBuilder(Questions, "questions")

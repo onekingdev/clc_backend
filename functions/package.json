@@ -6,7 +6,7 @@
     "serve": "npm run build && npm run copy-files && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "npm run copy-files && firebase deploy --only functions",
+    "deploy": "npm run build && npm run copy-files && firebase deploy --only functions",
     "logs": "firebase functions:log",
     "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css lib/"
   },

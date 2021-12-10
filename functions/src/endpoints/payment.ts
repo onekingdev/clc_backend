@@ -8,16 +8,18 @@ import { connect } from "../config";
 import moment = require("moment");
 import { sendSubscriptionEmail } from "../mail/payment";
 import { getStripeKey } from "../services/stripe";
-import { stripe_env } from "../config";
+import { stripe_env, runtimeOpts } from "../config";
 import { ActivationCodes } from "../entities/ActivationCodes";
 
 const cors = require("cors")({ origin: true });
 
 // @ts-ignore
 const stripe = new Stripe(
-  "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"
+  process.env.NODE_ENV == "production" ? 
+  process.env.STRIPE_PRODUCTION_KEY
+  : process.env.STRIPE_DEVELOPMENT_KEY
 );
-export const paymentIntent = functions.https.onRequest(
+export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const { items } = request.body;
@@ -31,7 +33,7 @@ export const paymentIntent = functions.https.onRequest(
   }
 );
 
-export const paymentSubscription = functions.https.onRequest(
+export const paymentSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const { email, paymentMethod, subscriptionType } = request.body;
@@ -45,24 +47,26 @@ export const paymentSubscription = functions.https.onRequest(
       let customer;
       try{
         customer = await stripe.customers.create({
-        payment_method: paymentMethod.id,
-        email: email,
-        invoice_settings: {
-          default_payment_method: paymentMethod.id,
-        },
-      });
+          payment_method: paymentMethod.id,
+          email: email,
+          invoice_settings: {
+            default_payment_method: paymentMethod.id,
+          },
+        });
       } catch (err) {
         response.send({ client_secret: null, status: "invalid_creditcard" });
+        return;
 
       } 
+
       await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: customer.id,
       });
 
       let subscription;
-      code.trailDays > 0
 
       if (code.trailDays > 0) {
+
         subscription = await stripe.subscriptions
           .create({
             customer: customer.id,
@@ -79,6 +83,7 @@ export const paymentSubscription = functions.https.onRequest(
           .catch((err) => response.send(err));
           
       } else {
+
         subscription = await stripe.subscriptions.create({
           customer: customer.id,
           items: [
@@ -122,65 +127,118 @@ export const paymentSubscription = functions.https.onRequest(
   }
 );
 
-export const updatePaymentDetails = functions.https.onRequest(
+export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
+      
       const { id, newPaymentMethod } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
 
       let user = await repo.findOne({ id: id });
       const { customerID, paymentMethod } = user.payment;
+      try {
+        await stripe.paymentMethods.detach(paymentMethod.id);
 
-      await stripe.paymentMethods.detach(paymentMethod.id);
+        const res = await stripe.paymentMethods.attach(newPaymentMethod.id, {
+          customer: customerID,
+        });
+        console.log("update res is ", res);
+        const paymentDetails = {
+          id: newPaymentMethod.id,
+          brand: newPaymentMethod.card.brand,
+          expMonth: newPaymentMethod.card.exp_month,
+          expYear: newPaymentMethod.card.exp_year,
+          last4: newPaymentMethod.card.last4,
+        };
 
-      const res = await stripe.paymentMethods.attach(newPaymentMethod.id, {
-        customer: customerID,
-      });
+        user.payment.paymentMethod = paymentDetails;
 
-      const paymentDetails = {
-        id: newPaymentMethod.id,
-        brand: newPaymentMethod.card.brand,
-        expMonth: newPaymentMethod.card.exp_month,
-        expYear: newPaymentMethod.card.exp_year,
-        last4: newPaymentMethod.card.last4,
-      };
+        await repo.save(user);
+        response.send({success: true,data:res});
 
-      user.payment.paymentMethod = paymentDetails;
+      } catch (err) {
+        response.send({success:false, message:err.raw.message})
+      }
+      
 
-      await repo.save(user);
-
-      response.send(res);
     });
   }
 );
 
-export const cancelSubscription = functions.https.onRequest(
+export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
-      const { id } = request.body;
-      const connection = await connect();
-      const repo = connection.getRepository(Users);
+      try{
+        const { id } = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
 
-      let user = await repo.findOne({ id: id });
-      const { subscriptionID } = user.payment;
+        let user = await repo.findOne({ id: id });
+        const { subscriptionID } = user.payment;
+        // const subscriptionID = "sub_1Jz44lAT9ya87fpT3lFGFF9o";
 
-      const deleted = await stripe.subscriptions.del(subscriptionID);
+        // const deleted = await stripe.subscriptions.del(subscriptionID);
 
-      if (deleted.status === "canceled") {
-        user.payment = {
-          ...user.payment,
-          canceled: true,
-        };
-        await repo.save(user);
-      }
-
-      response.send(deleted);
+        // if (deleted.status === "canceled") {
+        //   user.payment = {
+        //     ...user.payment,
+        //     canceled: true,
+        //   };
+        //   await repo.save(user);
+        // }
+        // response.send(deleted);
+        const canceled = await stripe.subscriptions.update(subscriptionID,{
+          cancel_at_period_end: true
+        })
+        let currentPeriodEnd = new Date(canceled.current_period_end * 1000);
+        if(canceled.cancel_at_period_end) {
+          user.payment = {
+                ...user.payment,
+                canceled: true,
+                subscription: currentPeriodEnd,
+              };
+          await repo.save(user);
+        }
+        response.send({success: true,data:canceled});
+      } catch(err) {
+        response.send({success:false, message:err.raw.message})
+      } 
     });
   }
 );
 
-export const stripeHook = functions.https.onRequest(
+export const reActiveSubscription = functions.runWith(runtimeOpts).https.onRequest(
+  async (request, response) => {
+    cors(request, response, async () => {
+      try{
+        const { id } = request.body;
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+  
+        let user = await repo.findOne({ id: id });
+        const { subscriptionID } = user.payment;
+        const updatedSubscription = await stripe.subscriptions.update(subscriptionID,{
+          cancel_at_period_end: false
+        })
+        let currentPeriodEnd = new Date(updatedSubscription.current_period_end * 1000);
+        if(!updatedSubscription.cancel_at_period_end) {
+          user.payment = {
+                ...user.payment,
+                canceled: false,
+                subscription: currentPeriodEnd,
+              };
+          await repo.save(user);
+        }
+        response.send({success: true,data:updatedSubscription});
+      } catch(err) {
+        response.send({success:false, message:err.raw.message})
+      }
+    });
+  }
+);
+
+export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
       const sig = request.headers["stripe-signature"];
@@ -195,7 +253,6 @@ export const stripeHook = functions.https.onRequest(
           endpointSecret
         );
       } catch (err) {
-        console.log(err);
         response.send({ status: "error" });
         return;
       }

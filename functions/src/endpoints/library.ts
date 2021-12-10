@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import {connect} from '../config';
+import {connect, runtimeOpts} from '../config';
 import { Library } from '../entities/Library';
 import {vimeoDataExtractor} from "../helpers/parser";
 const cors = require('cors')({origin: true});
@@ -26,7 +26,7 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
     });
 });
 
-export const getWeeklyHandBreakdown = functions.https.onRequest(async (request, response) => {
+export const getWeeklyHandBreakdown = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
     cors(request, response, async () => {
         const connection = await connect();
 
