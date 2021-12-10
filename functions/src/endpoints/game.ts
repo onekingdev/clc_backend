@@ -87,8 +87,6 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
       const repo = connection.getRepository(Users);
       let thisUser = await repo.findOne({ id: user.id });
       let all;
-      console.log("changed")
-      console.log(...thisUser.path.availableTopics, "sec ",...thisUser.path.masteredLessons)
       //if (thisUser.path.masteredLessons.length > 0) {
         
         // console.log("query is ",query);
