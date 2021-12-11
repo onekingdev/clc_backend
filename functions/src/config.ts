@@ -6,7 +6,7 @@ export const prod = process.env.NODE_ENV === 'production';
 export const stripe_env = process.env.NODE_ENV;
 
 
-/*-------------------- Production database -S-----------------------*/
+/*-------------------- Production database -S-----------------------*
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
@@ -41,6 +41,34 @@ export const config: ConnectionOptions = {
     port: 3306,
     username: 'devs',
     password: 'devs1234',
+    database: 'clc',
+    synchronize: true,
+    logging: false,
+    entities: [
+        'lib/entities/*.js'
+    ],
+
+    // Dev Mode
+    ...(prod && {
+        database: 'clc',
+        logging: false,
+        // synchronize: false,
+        extra: {
+            socketPath: '/cloudsql/devenvclc:us-central1:clc-dev'
+        }
+    }),
+}
+/*-------------------- Dev database -E-----------------------*/
+
+/*-------------------- Dev database -S-----------------------*/
+
+export const config: ConnectionOptions = {
+    name: 'clc',
+    type: 'mysql',
+    host:'localhost',
+    port: 3306,
+    username: 'root',
+    password: '',
     database: 'clc',
     synchronize: true,
     logging: false,
