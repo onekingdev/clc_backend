@@ -138,30 +138,56 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
 
       let user = await repo.findOne({ id: id });
       const { customerID, paymentMethod } = user.payment;
-      try {
-        await stripe.paymentMethods.detach(paymentMethod.id);
+      // try {
+      let isAttachSuccess = true;
+      let isUpdateSuccess = true;
+      /*--------------- add new payment method to payments method list in stripe -S----------------------*/
+      const res = await stripe.paymentMethods.attach(newPaymentMethod.id, {
+        customer: customerID,
+      }).catch(e => {
+        console.log("=============attach failed================");
+        isAttachSuccess = false;
+        console.log(e);
+        console.log(e.raw);
+        response.send({success:false, message:e.raw.message})
+      });
+      /*--------------- add new payment method to payments method list in stripe -E----------------------*/
+      console.log("isAttach Success", isAttachSuccess);
+      if(!isAttachSuccess) return;
 
-        const res = await stripe.paymentMethods.attach(newPaymentMethod.id, {
-          customer: customerID,
-        });
-        console.log("update res is ", res);
-        const paymentDetails = {
-          id: newPaymentMethod.id,
-          brand: newPaymentMethod.card.brand,
-          expMonth: newPaymentMethod.card.exp_month,
-          expYear: newPaymentMethod.card.exp_year,
-          last4: newPaymentMethod.card.last4,
-        };
+      /*--------------- upgrade paymentmenthod to  new payment method for customer -S----------------------*/
+      stripe.customers.update(customerID,{
+        invoice_settings : {
+          default_payment_method: newPaymentMethod.id
+        }
+      }).catch(e=> {
+        isUpdateSuccess = false;
+        response.send({success:false, message:e.raw.message})
 
-        user.payment.paymentMethod = paymentDetails;
+      })
+      /*--------------- upgrade paymentmenthod to  new payment method for customer -E----------------------*/
 
-        await repo.save(user);
-        response.send({success: true,data:res});
+      if(!isUpdateSuccess) return;
 
-      } catch (err) {
-        response.send({success:false, message:err.raw.message})
-      }
-      
+      /*--------------- delete old paymentmenthod from payments method list in stripe -S----------------------*/
+      await stripe.paymentMethods.detach(paymentMethod.id);
+      /*--------------- delete old paymentmenthod from payments method list in stripe -E----------------------*/
+
+      console.log("update res is ", res);
+      /*--------------- upgrade payment method in database -S------------------------------*/
+      const paymentDetails = {
+        id: newPaymentMethod.id,
+        brand: newPaymentMethod.card.brand,
+        expMonth: newPaymentMethod.card.exp_month,
+        expYear: newPaymentMethod.card.exp_year,
+        last4: newPaymentMethod.card.last4,
+      };
+      /*--------------- upgrade payment method in database -E------------------------------*/
+
+      user.payment.paymentMethod = paymentDetails;
+
+      await repo.save(user);
+      response.send({success: true,data:res});
 
     });
   }
