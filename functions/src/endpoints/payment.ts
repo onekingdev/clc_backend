@@ -37,12 +37,13 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
   async (request, response) => {
     cors(request, response, async () => {
       const { email, paymentMethod, subscriptionType, reactivate } = request.body;
-      paymentMethod.card={
-        brand: paymentMethod.brand,
-        exp_month: paymentMethod.expMonth,
-        exp_year: paymentMethod.expYear,
-        last4: paymentMethod.last4,
-      }
+      if(reactivate) 
+        paymentMethod.card={
+          brand: paymentMethod.brand,
+          exp_month: paymentMethod.expMonth,
+          exp_year: paymentMethod.expYear,
+          last4: paymentMethod.last4,
+        }
       
       const connection = await connect();
 
