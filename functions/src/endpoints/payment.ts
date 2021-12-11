@@ -36,7 +36,14 @@ export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
 export const paymentSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
-      const { email, paymentMethod, subscriptionType } = request.body;
+      const { email, paymentMethod, subscriptionType, reactivate } = request.body;
+      paymentMethod.card={
+        brand: paymentMethod.brand,
+        exp_month: paymentMethod.expMonth,
+        exp_year: paymentMethod.expYear,
+        last4: paymentMethod.last4,
+      }
+      
       const connection = await connect();
 
       const repo = connection.getRepository(Users);
@@ -54,14 +61,15 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           },
         });
       } catch (err) {
-        response.send({ client_secret: null, status: "invalid_creditcard" });
-        return;
-
+        if(reactivate) customer = {id:user.payment.customerID};
+        else {
+          response.send({ client_secret: null, status: "invalid_creditcard" });
+          return;
+        }
       } 
-
       await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: customer.id,
-      });
+      }).catch(console.log);
 
       let subscription;
       console.log("user.payment.canceled ", user.payment.canceled )
@@ -113,7 +121,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
             expYear: paymentMethod.card.exp_year,
             last4: paymentMethod.card.last4,
           },
-          canceled: user.payment.canceled
+          canceled: false
         };
       } else {
         response.send({ client_secret: null, status: "error" });
@@ -185,7 +193,6 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       /*--------------- upgrade payment method in database -E------------------------------*/
 
       user.payment.paymentMethod = paymentDetails;
-
       await repo.save(user);
       response.send({success: true,data:res});
 
