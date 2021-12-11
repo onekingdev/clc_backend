@@ -33,7 +33,7 @@ export const config: ConnectionOptions = {
 }
 /*-------------------- Production database -E-----------------------*/
 
-/*-------------------- Dev database -S-----------------------*
+/*-------------------- Dev database -S-----------------------*/
 export const config: ConnectionOptions = {
     name: 'clc',
     type: 'mysql',
@@ -60,7 +60,7 @@ export const config: ConnectionOptions = {
 }
 /*-------------------- Dev database -E-----------------------*/
 
-/*-------------------- Dev database -S-----------------------*/
+/*-------------------- Dev database -S-----------------------*
 
 export const config: ConnectionOptions = {
     name: 'clc',
