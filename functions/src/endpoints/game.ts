@@ -129,8 +129,8 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
           .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
           .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
           .where("topics.UID IN (:...availableTopics)")
-        // if(thisUser.path.availableTopics.length != 0 && thisUser.path.masteredLessons.length !=0 )
-          // all.setParameters({ availableTopics: thisUser.path.availableTopics })
+        if(thisUser.path.availableTopics.length != 0)
+          all.setParameters({ availableTopics: thisUser.path.availableTopics })
         all.limit(1000)
            .getRawMany();
       }
