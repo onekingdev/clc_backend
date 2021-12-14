@@ -121,10 +121,13 @@ export const parseHandHistory = (record: string) => {
   let sb = 0;
   let ante = 0;
   let me: any;
+  let lastAmount = {
+    max: 0
+  };
   for (let i = 0; i < records.length; i++) {
     const line = records[i];
     let result = handRegex.exec(line)?.groups;
-
+    
     if (result) {
       if (
         result.hand.trim() === "posts small blind" ||
@@ -144,7 +147,6 @@ export const parseHandHistory = (record: string) => {
       }
       if (mapPlayers[result.seat_name].cards.length > 0)
         me = mapPlayers[result.seat_name];
-
       if (
         result.hand.trim() === "posts ante" ||
         result.hand.trim() === "posts the ante" ||
@@ -159,21 +161,33 @@ export const parseHandHistory = (record: string) => {
         result.hand.trim() === "bets" ||
         result.hand.trim() === "is allIn"
       ) {
+        let player = parseInt(mapPlayers[result.seat_name].number);
+        let totalChips = mapPlayers[result.seat_name].initAmount;
+        let playerName = result.seat_name;
+        if(lastAmount[player] == undefined)  lastAmount[player] = 0;
+        // console.log(lastAmount[player] == undefined, playerName, lastAmount[player], lastAmount);
+        let action = result.hand.trim();
+        let copyAction = result.hand.trim();
+        let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        let copyAmount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        let displayAmount = (result.hand.trim() == "folds") ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
+        
+        let cards = mapPlayers[result.seat_name].cards;
+        let tableAction = "";
         hands.push({
-          player: parseInt(mapPlayers[result.seat_name].number),
-          totalChips: mapPlayers[result.seat_name].initAmount,
-          playerName: result.seat_name,
-          action: result.hand.trim(),
-          copyAction: result.hand.trim(),
-          amount: result.seat_amount
-            ? parseInt(result.seat_amount.replace(/,/g, ""), 10)
-            : 0,
-          copyAmount: result.seat_amount
-            ? parseInt(result.seat_amount.replace(/,/g, ""), 10)
-            : 0,
-          cards: mapPlayers[result.seat_name].cards,
-          tableAction: "",
+          player: player,
+          totalChips: totalChips,
+          playerName: playerName,
+          action: action,
+          copyAction: copyAction,
+          amount: amount,
+          copyAmount: copyAmount,
+          displayAmount: displayAmount,
+          cards: cards,
+          tableAction: tableAction,
         });
+        lastAmount[player] = (result.hand.trim() === "posts ante" || result.hand.trim() === "posts the ante" ) ? 0 : displayAmount; 
+        if(lastAmount.max < lastAmount[player]) lastAmount.max = lastAmount[player];
       }
 
       if (flopIndex > 0 && flopIndex - 1 === i) {
@@ -222,11 +236,12 @@ export const parseHandHistory = (record: string) => {
       copyAction: "?",
       amount: 0,
       copyAmount: 0,
+      displayAmount: 0,
       cards: me.cards,
       tableAction: "",
     });
   }
-
+  // console.log(hands);
   const dealerIndex = record.search("is the button");
   const dealer = parseInt(record[dealerIndex - 2]);
   const tableInfo = {

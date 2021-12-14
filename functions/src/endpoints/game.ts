@@ -87,7 +87,7 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
       const repo = connection.getRepository(Users);
       let thisUser = await repo.findOne({ id: user.id });
       let all;
-      //if (thisUser.path.masteredLessons.length > 0) {
+      // if (thisUser.path.masteredLessons.length > 0) {
         
         // console.log("query is ",query);
       all = await connection
@@ -107,33 +107,54 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
         .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
         .where("topics.UID IN (:...availableTopics)")
         .andWhere("lessons.UID NOT IN (:...masteredLessons)")
-        .setParameters({ availableTopics: thisUser.path.availableTopics })
+        .setParameters({ availableTopics: thisUser.path.availableTopics.length > 0 ? thisUser.path.availableTopics : "" })
         .setParameters({ masteredLessons: thisUser.path.masteredLessons.length > 0 ? thisUser.path.masteredLessons : "" })
         .limit(1000)
         // .getSql();
         .getRawMany();
-        console.log(all);
-      /* } else {
-        all = await connection
-          .createQueryBuilder(Questions, "questions")
-          .addSelect("topics.id", "topics_id")
-          .addSelect("topics.UID", "topics_UID")
-          .addSelect("topics.name", "topics_name")
-          .addSelect("topics.chips", "topics_chips")
-          .addSelect("topics.tickets", "topics_tickets")
-          .addSelect("topics.masteredLevel", "topics_masteredLevel")
-          .addSelect("lessons.UID", "lessons_UID")
-          .addSelect("lessons.name", "lessons_name")
-          .addSelect("lessons.rule", "lessons_rule")
-          .addSelect("lessons.description", "lessons_description")
-          .addSelect("questions.handNumber", "questions_handNumber")
-          .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
-          .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
-          .where("topics.UID IN (:...availableTopics)")
-          .setParameters({ availableTopics: thisUser.path.availableTopics })
-          .limit(1000)
-          .getRawMany();
-      }*/
+      // if(all.length < 1) {
+      //   all = await connection
+      //     .createQueryBuilder(Questions, "questions")
+      //     .addSelect("topics.id", "topics_id")
+      //     .addSelect("topics.UID", "topics_UID")
+      //     .addSelect("topics.name", "topics_name")
+      //     .addSelect("topics.chips", "topics_chips")
+      //     .addSelect("topics.tickets", "topics_tickets")
+      //     .addSelect("topics.masteredLevel", "topics_masteredLevel")
+      //     .addSelect("lessons.UID", "lessons_UID")
+      //     .addSelect("lessons.name", "lessons_name")
+      //     .addSelect("lessons.rule", "lessons_rule")
+      //     .addSelect("lessons.description", "lessons_description")
+      //     .addSelect("questions.handNumber", "questions_handNumber")
+      //     .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
+      //     .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
+      //     .where("topics.UID IN (:...availableTopics)")
+      //     .setParameters({ availableTopics: thisUser.path.availableTopics.length > 0 ? thisUser.path.availableTopics : "" })
+      //     .limit(1000)
+      //     .getRawMany();
+      // }
+      // console.log(all)
+      // } else {
+      //   all = await connection
+      //     .createQueryBuilder(Questions, "questions")
+      //     .addSelect("topics.id", "topics_id")
+      //     .addSelect("topics.UID", "topics_UID")
+      //     .addSelect("topics.name", "topics_name")
+      //     .addSelect("topics.chips", "topics_chips")
+      //     .addSelect("topics.tickets", "topics_tickets")
+      //     .addSelect("topics.masteredLevel", "topics_masteredLevel")
+      //     .addSelect("lessons.UID", "lessons_UID")
+      //     .addSelect("lessons.name", "lessons_name")
+      //     .addSelect("lessons.rule", "lessons_rule")
+      //     .addSelect("lessons.description", "lessons_description")
+      //     .addSelect("questions.handNumber", "questions_handNumber")
+      //     .innerJoin(Lessons, "lessons", "questions.lessonUID = lessons.UID")
+      //     .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
+      //     .where("topics.UID IN (:...availableTopics)")
+      //     .setParameters({ availableTopics: thisUser.path.availableTopics })
+      //     .limit(1000)
+      //     .getRawMany();
+      // }
 
       let data = [];
 
@@ -201,6 +222,7 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
     });
   }
 );
+
 
 export const getQuestionsAssessment = functions.https.onRequest(
   async (request, response) => {
