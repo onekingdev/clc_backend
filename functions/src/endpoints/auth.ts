@@ -3,11 +3,34 @@ import { connect, runtimeOpts } from "../config";
 import { Users } from "../entities/Users";
 import { ActivationCodes } from "../entities/ActivationCodes";
 import { Topics } from "../entities/Topics";
+import {applyMiddleware} from "../middleware"
+const jwt = require('jsonwebtoken');
+
 const cors = require("cors")({ origin: true });
 
+// export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
+//   async (request, response) => {
+//     cors(request, response, async () => {
+//       const { activationCode } = request.body;
+
+//       const connection = await connect();
+//       const repo = connection.getRepository(ActivationCodes);
+
+//       let result: object = await repo.findOne({
+//         where: {
+//           code: activationCode,
+//         },
+//       });
+
+//       if (!result) result = { error: 403 };
+
+//       response.send(result);
+//     });
+//   }
+// );
 export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const { activationCode } = request.body;
 
       const connection = await connect();
@@ -22,6 +45,26 @@ export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
       if (!result) result = { error: 403 };
 
       response.send(result);
+    }, false)
+  }
+);
+  
+export const getToken = functions.runWith(runtimeOpts).https.onRequest(
+  async (request, response) => {
+    cors(request, response, async () => {
+      const {id, email} = request.body;
+      /*--------------------- Create token -S-----------------------*/
+      const token = jwt.sign(
+        { user_id: id, email },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "2h",
+        }
+      );
+      /*--------------------- Create token -E-----------------------*/
+      let result = {token: token};
+      response.send(result);
+
     });
   }
 );
