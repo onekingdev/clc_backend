@@ -69,6 +69,19 @@ export const getToken = functions.runWith(runtimeOpts).https.onRequest(
   }
 );
 
+export const getTokenFunc = (id, email) => {
+      /*--------------------- Create token -S-----------------------*/
+      const token = jwt.sign(
+        { user_id: id, email },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "2h",
+        }
+      );
+      /*--------------------- Create token -E-----------------------*/
+      return token
+
+  }
 export const createUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     cors(request, response, async () => {
@@ -156,8 +169,9 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
         console.log('##### saved user in db ######')
         console.table(saved)
         console.log('############################')
+        const token = saved.id ? getTokenFunc(saved.id, saved.email): "";
 
-        response.send(saved);
+        response.send({...saved, token});
       } catch (e) {
         response.send(e);
       }
@@ -174,8 +188,9 @@ export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
       const repo = connection.getRepository(Users);
 
       const all = await repo.findOne({ email: email });
-
-      response.send(all);
+      console.log(all.id, all.email)
+      const token = all.id ? getTokenFunc(all.id, all.email): "";
+      response.send({...all, token: token});
     });
   }
 );

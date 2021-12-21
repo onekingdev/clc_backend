@@ -71,7 +71,7 @@ export const parseHandHistory = (record: string) => {
     .map((p) => `\\b${p.name.replace(" ", "\\s+")}\\b`)
     .join("|");
   const handRegex = new RegExp(
-    `(?<seat_name>${words})\\:?\\s+(?<hand>[A-Za-z]+(\\s+[A-Za-z]+)*)(\\s*)\\[?(\\s*)(?<seat_amount>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?(\\s*)\\]?`
+    `(?<seat_name>${words})\\:?\\s+(?<hand>[A-Za-z]+(\\s+[A-Za-z]+)*)(\\s*)\\[?(\\s*)(?<seat_amount>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?\\s*(?<to>([a-zA-Z]*))?\s*(?<seat_amount_2>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?(\\s*)\\]?`   //\s*${words}\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*
   );
   const dealRegex = new RegExp(
     `\\bDealt\\b\\s+\\bto\\b\\s+(?<seat_name>${words})\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*`
@@ -127,8 +127,8 @@ export const parseHandHistory = (record: string) => {
   for (let i = 0; i < records.length; i++) {
     const line = records[i];
     let result = handRegex.exec(line)?.groups;
-    
     if (result) {
+
       if (
         result.hand.trim() === "posts small blind" ||
         result.hand.trim() === "posts the small blind"
@@ -163,6 +163,8 @@ export const parseHandHistory = (record: string) => {
         result.hand.trim() === "is allIn"
       ) {
         if(result.hand.trim() === "bets") lastAmount = {max : 0}
+        // if(result.hand.trim() === "raises" && reul)
+
         let player = parseInt(mapPlayers[result.seat_name].number);
         let totalChips = mapPlayers[result.seat_name].initAmount;
         let playerName = result.seat_name;
@@ -170,7 +172,9 @@ export const parseHandHistory = (record: string) => {
         // console.log(lastAmount[player] == undefined, playerName, lastAmount[player], lastAmount);
         let action = result.hand.trim();
         let copyAction = result.hand.trim();
-        let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        // let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        let amount = !!result.seat_amount  ? (!!result.seat_amount_2 && result.seat_amount_2!=' ') ? parseInt(result.seat_amount_2.replace(/,/g, ""), 10) - parseInt(result.seat_amount.replace(/,/g, ""), 10) : parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+
         if(result.hand.trim() === "raises to") {
           amount = amount - lastAmount[player];
         }
