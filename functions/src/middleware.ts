@@ -28,6 +28,3 @@ export const applyMiddleware = (req, res, handler, checkToken = true) => {
       return handler(req, res)
     })
   }
-// exports.handler = functions.runWith(runtimeOpts).https.onRequest(
-//    applyMiddleware(handler, { authenticatedRoute: true })
-// )
