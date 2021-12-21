@@ -156,11 +156,13 @@ export const parseHandHistory = (record: string) => {
         result.hand.trim() === "posts the small blind" ||
         result.hand.trim() === "calls" ||
         result.hand.trim() === "raises" ||
+        result.hand.trim() === "raises to" ||
         result.hand.trim() === "checks" ||
         result.hand.trim() === "folds" ||
         result.hand.trim() === "bets" ||
         result.hand.trim() === "is allIn"
       ) {
+        if(result.hand.trim() === "bets") lastAmount = {max : 0}
         let player = parseInt(mapPlayers[result.seat_name].number);
         let totalChips = mapPlayers[result.seat_name].initAmount;
         let playerName = result.seat_name;
@@ -169,8 +171,14 @@ export const parseHandHistory = (record: string) => {
         let action = result.hand.trim();
         let copyAction = result.hand.trim();
         let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
-        let copyAmount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
-        let displayAmount = (result.hand.trim() == "folds") ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
+        if(result.hand.trim() === "raises to") {
+          amount = amount - lastAmount[player];
+        }
+        let copyAmount = amount;
+        // let displayAmount = (amount == 0 ) ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
+        let displayAmount = (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
+        
+        // let displayAmount = (result.hand.trim() == "folds" || result.hand.trim() == "folds" ) ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
         
         let cards = mapPlayers[result.seat_name].cards;
         let tableAction = "";
@@ -182,7 +190,7 @@ export const parseHandHistory = (record: string) => {
           copyAction: copyAction,
           amount: amount,
           copyAmount: copyAmount,
-          displayAmount: displayAmount,
+          displayAmount: (amount == 0 ) ? 0 : displayAmount,
           cards: cards,
           tableAction: tableAction,
         });
@@ -195,33 +203,39 @@ export const parseHandHistory = (record: string) => {
           tableAction: "flop",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
         hands.push({
           tableAction: "flop",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
       } else if (turnIndex > 0 && turnIndex - 1 === i) {
         hands.push({
           tableAction: "turn",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
         hands.push({
           tableAction: "turn",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
       } else if (riverIndex > 0 && riverIndex - 1 === i) {
         hands.push({
           tableAction: "river",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
         hands.push({
           tableAction: "river",
           amount: 0,
           copyAmount: 0,
+          displayAmount: 0,
         });
       }
     }

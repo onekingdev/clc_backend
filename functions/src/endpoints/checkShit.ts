@@ -28,16 +28,17 @@ export const check = functions.https.onRequest(async (request, response) => {
 
 export const addActivationCode = functions.https.onRequest(async (request, response) => {
     cors(request, response, async () => {
+        const { code, isActive } = request.body;
         const connection = await connect();
         const repo = connection.getRepository(ActivationCodes);
 
-        repo.save({
-            code: 'TESTER2021',
-            active: true,
+        const saved = await repo.save({
+            code: code,
+            active: isActive,
             createdAt: new Date()
         })
 
-        response.send();
+        response.send(saved);
     });
 });
 
@@ -79,8 +80,9 @@ export const setAssessment = functions.https.onRequest(async (request, response)
     cors(request, response, async () => {
         const connection = await connect();
         const repo = connection.getRepository(Users);
+        const { id } = request.body;
 
-        let user = await repo.findOne({id: 58});
+        let user = await repo.findOne({id: id});
 
         user.assessment = true;
 
@@ -95,7 +97,8 @@ export const checkUser = functions.https.onRequest(async (request, response) => 
     cors(request, response, async () => {
         const connection = await connect();
         const repoUsers = connection.getRepository(Users);
-        let user = await repoUsers.findOne({id: 58});
+        const { id } = request.body;
+        let user = await repoUsers.findOne({id: id});
 
         response.send(user);
     })

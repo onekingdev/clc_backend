@@ -598,7 +598,7 @@ export const updateMasteredLessons = functions.https.onRequest(
 
       await repo.save(user);
 
-      response.send();
+      response.send(user);
     });
   }
 );
