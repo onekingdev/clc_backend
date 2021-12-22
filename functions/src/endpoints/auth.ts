@@ -6,11 +6,10 @@ import { Topics } from "../entities/Topics";
 import {applyMiddleware} from "../middleware"
 const jwt = require('jsonwebtoken');
 
-const cors = require("cors")({ origin: true });
 
 // export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
 //   async (request, response) => {
-//     cors(request, response, async () => {
+//     applyMiddleware(request, response, async () =>{
 //       const { activationCode } = request.body;
 
 //       const connection = await connect();
@@ -51,7 +50,7 @@ export const validateCode = functions.runWith(runtimeOpts).https.onRequest(
   
 export const getToken = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const {id, email} = request.body;
       /*--------------------- Create token -S-----------------------*/
       const token = jwt.sign(
@@ -65,7 +64,7 @@ export const getToken = functions.runWith(runtimeOpts).https.onRequest(
       let result = {token: token};
       response.send(result);
 
-    });
+    }, false);
   }
 );
 
@@ -84,7 +83,7 @@ export const getTokenFunc = (id, email) => {
   }
 export const createUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const { activationCode, email, userName, stringID } = request.body;
 
       try {
@@ -175,40 +174,41 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
       } catch (e) {
         response.send(e);
       }
-    });
+    }, false);
   }
 );
 
 export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
-
+    applyMiddleware(request, response, async () =>{
+      console.log("get suser start")
       const { email } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
 
       const all = await repo.findOne({ email: email });
+      console.log("all is", all)
       console.log(all.id, all.email)
       const token = all.id ? getTokenFunc(all.id, all.email): "";
       response.send({...all, token: token});
-    });
+    }, false);
   }
 );
 
 export const getCodes = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
-  cors(request, response, async () => {
+  applyMiddleware(request, response, async () =>{
     const connection = await connect();
     const repo = connection.getRepository(ActivationCodes);
 
     const all = await repo.find();
 
     response.send(all);
-  });
+  }, false);
 });
 
 export const updateUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       console.log("start update user")
       const { id, avatar, email } = request.body;
       const connection = await connect();

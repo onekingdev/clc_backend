@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions';
 import {connect} from '../config';
 import {Events} from "../entities/Events";
-const cors = require('cors')({origin: true});
+import {applyMiddleware} from "../middleware"
+
 
 export const getEvents = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         const repo = connection.getRepository(Events);
@@ -15,7 +16,7 @@ export const getEvents = functions.https.onRequest(async (request, response) => 
 });
 
 export const getSpotlight = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         const repo = connection.getRepository(Events);
@@ -26,7 +27,7 @@ export const getSpotlight = functions.https.onRequest(async (request, response) 
 });
 
 export const uploadEvents = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         const repo = connection.getRepository(Events);

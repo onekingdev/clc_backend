@@ -6,12 +6,13 @@ import {Questions} from "../entities/Questions";
 import {Library} from "../entities/Library";
 import {Glossary} from "../entities/Glossary";
 import {Events} from "../entities/Events";
+import {applyMiddleware} from "../middleware"
+
 // import {Earnings} from "../entities/Earnings";
 // import {Users} from "../entities/Users";
-const cors = require('cors')({origin: true});
 
 export const dropTopics = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -24,7 +25,7 @@ export const dropTopics = functions.https.onRequest(async (request, response) =>
 });
 
 export const dropLessons = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -37,7 +38,7 @@ export const dropLessons = functions.https.onRequest(async (request, response) =
 });
 
 export const dropQuestions = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -50,7 +51,7 @@ export const dropQuestions = functions.https.onRequest(async (request, response)
 });
 
 export const dropLibrary = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -63,7 +64,7 @@ export const dropLibrary = functions.https.onRequest(async (request, response) =
 });
 
 export const dropGlossary = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -76,7 +77,7 @@ export const dropGlossary = functions.https.onRequest(async (request, response) 
 });
 
 export const dropEvents = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -89,7 +90,7 @@ export const dropEvents = functions.https.onRequest(async (request, response) =>
 });
 
 /*export const dropUsers = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()
@@ -102,7 +103,7 @@ export const dropEvents = functions.https.onRequest(async (request, response) =>
 });
 
 export const dropEarnings = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
 
         await connection.createQueryBuilder()

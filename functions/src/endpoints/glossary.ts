@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions';
 import {connect} from '../config';
 import {Glossary} from "../entities/Glossary";
-const cors = require('cors')({origin: true});
+import {applyMiddleware} from "../middleware"
+
 
 export const getGlossary = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repo = connection.getRepository(Glossary);
 
@@ -15,7 +16,7 @@ export const getGlossary = functions.https.onRequest(async (request, response) =
 });
 
 export const uploadGlossary = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repoGlossary = connection.getRepository(Glossary);
         const {glossary} = request.body;

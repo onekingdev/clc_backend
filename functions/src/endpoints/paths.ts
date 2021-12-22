@@ -5,11 +5,12 @@ import { Lessons } from "../entities/Lessons";
 import { Questions } from "../entities/Questions";
 import { Users } from "../entities/Users";
 import { compareValues } from "../helpers/parser";
-const cors = require("cors")({ origin: true });
+import {applyMiddleware} from "../middleware"
+
 
 export const uploadContent = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
 
       const repoTopics = connection.getRepository(Topics);
@@ -69,7 +70,7 @@ export const getLessonData = async (uid: string, myTopics?: any) => {
 
 //TODO: fix this shit!!!!!
 export const getPaths = functions.https.onRequest(async (request, response) => {
-  cors(request, response, async () => {
+  applyMiddleware(request, response, async () =>{
     const { myTopics } = request.body;
 
     const connection = await connect();
@@ -154,7 +155,7 @@ export const getPaths = functions.https.onRequest(async (request, response) => {
 });
 
 export const buyTopic = functions.https.onRequest(async (request, response) => {
-  cors(request, response, async () => {
+  applyMiddleware(request, response, async () =>{
     const connection = await connect();
     const repo = connection.getRepository(Users);
     const { UID, id } = request.body;

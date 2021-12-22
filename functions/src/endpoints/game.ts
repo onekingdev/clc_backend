@@ -6,11 +6,12 @@ import { parseHandHistory } from "../helpers/parser";
 import { Lessons } from "../entities/Lessons";
 import { Topics } from "../entities/Topics";
 import { Users } from "../entities/Users";
-const cors = require("cors")({ origin: true });
+import {applyMiddleware} from "../middleware"
+
 
 export const getQuestions = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const repoQuestions = connection.getRepository(Questions);
       const { UID } = request.body;
@@ -80,7 +81,7 @@ export const getTotalLessons = async (topicUID) => {
 
 export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
 
       const { user } = request.body;
@@ -247,7 +248,7 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
 
 export const getQuestionsAssessment = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const { myTopics } = request.body;
 
@@ -382,7 +383,7 @@ export const getAnswers = async (questionID, userID) => {
 
 export const getQuestionsProgressbar = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const { type, UID, user, today } = request.body;
 
@@ -504,7 +505,7 @@ export const getQuestionsProgressbar = functions.https.onRequest(
 
 export const saveEarnings = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const repoEarnings = connection.getRepository(Earnings);
 
@@ -526,7 +527,7 @@ export const saveEarnings = functions.https.onRequest(
 );
 
 export const levelUp = functions.https.onRequest(async (request, response) => {
-  cors(request, response, async () => {
+  applyMiddleware(request, response, async () =>{
     const connection = await connect();
     const repo = connection.getRepository(Users);
 
@@ -567,7 +568,7 @@ export const levelUp = functions.https.onRequest(async (request, response) => {
 
 export const finishAssessment = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const repo = connection.getRepository(Users);
 
@@ -586,7 +587,7 @@ export const finishAssessment = functions.https.onRequest(
 
 export const updateMasteredLessons = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const connection = await connect();
       const repo = connection.getRepository(Users);
 

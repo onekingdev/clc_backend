@@ -3,12 +3,13 @@ import {connect} from "../config";
 import {ActivationCodes} from "../entities/ActivationCodes";
 import {Users} from "../entities/Users";
 import Stripe from "stripe";
-const cors = require('cors')({origin: true});
+import {applyMiddleware} from "../middleware"
+
 // @ts-ignore
 const stripe = new Stripe('sk_test_V09bhnBnCKBDwLD6gMha7WgG');
 
 export const check = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const subscriptionSchedule = await stripe.subscriptions.retrieve(
             'sub_J7Z8SX1rzyPb6X'
         );
@@ -27,7 +28,7 @@ export const check = functions.https.onRequest(async (request, response) => {
 });
 
 export const addActivationCode = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const { code, isActive } = request.body;
         const connection = await connect();
         const repo = connection.getRepository(ActivationCodes);
@@ -43,7 +44,7 @@ export const addActivationCode = functions.https.onRequest(async (request, respo
 });
 
 /*export const addAssessment = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repo = connection.getRepository(Users);
 
@@ -66,7 +67,7 @@ export const addActivationCode = functions.https.onRequest(async (request, respo
 });*/
 
 export const checkUsers = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repo = connection.getRepository(Users);
 
@@ -77,7 +78,7 @@ export const checkUsers = functions.https.onRequest(async (request, response) =>
 });
 
 export const setAssessment = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repo = connection.getRepository(Users);
         const { id } = request.body;
@@ -94,7 +95,7 @@ export const setAssessment = functions.https.onRequest(async (request, response)
 
 
 export const checkUser = functions.https.onRequest(async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
         const connection = await connect();
         const repoUsers = connection.getRepository(Users);
         const { id } = request.body;

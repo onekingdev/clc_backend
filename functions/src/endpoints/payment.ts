@@ -10,8 +10,8 @@ import { sendSubscriptionEmail } from "../mail/payment";
 import { getStripeKey } from "../services/stripe";
 import { stripe_env, runtimeOpts } from "../config";
 import { ActivationCodes } from "../entities/ActivationCodes";
+import {applyMiddleware} from "../middleware"
 
-const cors = require("cors")({ origin: true });
 
 // @ts-ignore
 const stripe = new Stripe(
@@ -21,7 +21,7 @@ const stripe = new Stripe(
 );
 export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const { items } = request.body;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: calculateOrderAmount(items),
@@ -35,7 +35,7 @@ export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
 
 export const paymentSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const { email, paymentMethod, subscriptionType, reactivate } = request.body;
       if(reactivate) 
         paymentMethod.card={
@@ -139,7 +139,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
 
 export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       
       const { id, newPaymentMethod } = request.body;
       const connection = await connect();
@@ -203,7 +203,7 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
 
 export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       try{
         const { id } = request.body;
         const connection = await connect();
@@ -245,7 +245,7 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
 
 export const reActiveSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       try{
         const { id } = request.body;
         const connection = await connect();
@@ -275,7 +275,7 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
 
 export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       const sig = request.headers["stripe-signature"];
 
       const endpointSecret = getStripeKey.hook_secret(stripe_env);
@@ -328,6 +328,6 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       }
 
       response.send({ status: "success" });
-    });
+    }, false);
   }
 );

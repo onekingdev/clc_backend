@@ -5,12 +5,13 @@ import { connect } from "../config";
 import { Users } from "../entities/Users";
 import { ActivationCodes } from "../entities/ActivationCodes";
 import { Topics } from "../entities/Topics";
+import {applyMiddleware} from "../middleware"
+
 const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-const cors = require("cors")({ origin: true });
 
 export const externalRegister = functions.https.onRequest(
   async (request, response) => {
-    cors(request, response, async () => {
+    applyMiddleware(request, response, async () =>{
       let user = request.body; // email, password, displayName
 
       await app

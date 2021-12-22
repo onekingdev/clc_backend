@@ -41,7 +41,7 @@ export const parseHandHistory = (record: string) => {
     /Seat\s+[#?|\']?(?<seat_number>\d+)\'?:\s+(?<seat_name>[a-zA-Z0-9!@#\$%\^\&*\)\(+=._/\-\s\']*)\s+\(\s*(?<seat_amount>\S+(\s+\S+)*)\s*\)/;
   const seatAmountRegex = /(?<seat_amount>(\d{1,3}(\,\d{1,3})*)*(\.\d{1,2})?)/;
   const flopRegex =
-    /\*+\s+(?<description>\w+(\s+\w+)*)\s+\*+\s+\[\s*(?<cards_0>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\](\s+\[\s*(?<cards_1>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?(\s+\[\s*(?<cards_2>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?/;
+    /\*+\s+(?<description>\w+(\s+\w+)*)\s+\*+\s+\[\s*(?<cards_0>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\](\s+\[\s*(?<cards_1>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\])?(\s+\[\s*(?<cards_2>[a-zA-Z0-9]{2}(\s*\,?\s*[a-zA-Z0-9]{2})*)\s*\]*)?/;
   const records = record.split("\n");
   let players = [];
   let flop: string[] = [];
@@ -172,8 +172,16 @@ export const parseHandHistory = (record: string) => {
         // console.log(lastAmount[player] == undefined, playerName, lastAmount[player], lastAmount);
         let action = result.hand.trim();
         let copyAction = result.hand.trim();
-        // let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
-        let amount = !!result.seat_amount  ? (!!result.seat_amount_2 && result.seat_amount_2!=' ') ? parseInt(result.seat_amount_2.replace(/,/g, ""), 10) - parseInt(result.seat_amount.replace(/,/g, ""), 10) : parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        if(result.seat_amount_2 && result.seat_amount_2!=' ') {
+          amount = parseInt(result.seat_amount_2.replace(/,/g, ""), 10)
+          result.hand = "raises to";
+          action = "raises to";
+          copyAction = "raises to"
+          // amount = parseInt(result.seat_amount_2.replace(/,/g, ""), 10) - parseInt(result.seat_amount.replace(/,/g, ""), 10);
+          // result.hand = "raises to";
+        }
+        // let amount = !!result.seat_amount  ? (!!result.seat_amount_2 && result.seat_amount_2!=' ') ? parseInt(result.seat_amount_2.replace(/,/g, ""), 10) - parseInt(result.seat_amount.replace(/,/g, ""), 10) : parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
 
         if(result.hand.trim() === "raises to") {
           amount = amount - lastAmount[player];
