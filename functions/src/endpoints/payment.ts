@@ -246,6 +246,8 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
 export const reActiveSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
+      console.log("===========================web hook==================================");
+      console.log(request.body);
       try{
         const { id } = request.body;
         const connection = await connect();
