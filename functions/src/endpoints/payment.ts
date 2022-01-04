@@ -156,7 +156,6 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       }).catch(e => {
         console.log("=============attach failed================");
         isAttachSuccess = false;
-        console.log(e);
         console.log(e.raw);
         response.send({success:false, message:e.raw.message})
       });
@@ -182,7 +181,6 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       await stripe.paymentMethods.detach(paymentMethod.id);
       /*--------------- delete old paymentmenthod from payments method list in stripe -E----------------------*/
 
-      console.log("update res is ", res);
       /*--------------- upgrade payment method in database -S------------------------------*/
       const paymentDetails = {
         id: newPaymentMethod.id,

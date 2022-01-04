@@ -115,7 +115,6 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
         .getRawMany();
       if(all.length < 1) {
         if(thisUser.path.availableTopics.length != 0) {
-          console.log("if")
           all = await connection
           .createQueryBuilder(Questions, "questions")
           .addSelect("topics.id", "topics_id")
@@ -136,7 +135,6 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
           .limit(1000)
            .getRawMany();
         } else  {
-          console.log("else")
           all = await connection
           .createQueryBuilder(Questions, "questions")
           .addSelect("topics.id", "topics_id")

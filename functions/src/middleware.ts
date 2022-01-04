@@ -5,7 +5,6 @@ const TOKEN_ERROR = 401;
 const SERVER_ERROR = 500;
 export const applyMiddleware = (req, res, handler, checkToken = true) => {
       cors(req, res, async () => {
-        console.log("appy middleware", !checkToken)
         if (!checkToken) return handler(req, res)
 
         const token =  req.body.token || req.query.token || req.get('authorization');

@@ -131,10 +131,6 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
             .getRawMany()
         ).map((t) => t.topics_UID);
 
-        console.log('##### code is assessment ######')
-        console.log(code.isAssessment)
-        console.log('###############################')
-
         const newUser = new Users();
         newUser.activationCodeID = code.id;
         newUser.assessment = code.isAssessment ? true : false;
@@ -181,14 +177,11 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
 export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      console.log("get suser start")
       const { email } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
 
       const all = await repo.findOne({ email: email });
-      console.log("all is", all)
-      console.log(all.id, all.email)
       const token = all.id ? getTokenFunc(all.id, all.email): "";
       response.send({...all, token: token});
     }, false);
@@ -209,16 +202,12 @@ export const getCodes = functions.runWith(runtimeOpts).https.onRequest(async (re
 export const updateUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      console.log("start update user")
       const { id, avatar, email } = request.body;
       const connection = await connect();
       const repo = connection.getRepository(Users);
-      console.log("repo conected")
       const all = await repo.findOne({ id: id });
-      console.log(all);
       all.avatar = avatar;
       all.email = email;
-      console.log("will save");
       const saved = await repo.save(all);
 
       response.send(saved);
