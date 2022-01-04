@@ -140,6 +140,7 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
         newUser.type = type();
         newUser.masteredLevel = 1;
         newUser.createdAt = new Date();
+        newUser.lastLoginAt = newUser.createdAt;
         newUser.stringID = stringID;
         newUser.payment = {
           id: "",

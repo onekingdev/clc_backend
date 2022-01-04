@@ -32,6 +32,9 @@ export class Users extends BaseEntity {
     @Column()
     createdAt: Date;
 
+    @Column()
+    lastLoginAt: Date;
+    
     @Column("simple-json")
     path: {
         availableTopics: string[],
