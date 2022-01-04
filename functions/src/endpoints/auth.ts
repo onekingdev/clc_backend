@@ -184,7 +184,9 @@ export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
 
       const all = await repo.findOne({ email: email });
       const token = all.id ? getTokenFunc(all.id, all.email): "";
+      all.lastLoginAt = new Date();
       response.send({...all, token: token});
+      if(!!all.id) all.save();
     }, false);
   }
 );
