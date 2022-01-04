@@ -14,12 +14,13 @@ const mailTransport = nodemailer.createTransport({
 });
 
 let htmlmail='<p>This is report mail</p>'
-export const sendReportEmail = functions.pubsub.schedule('5 14 * * *').onRun((context) => {             //default timezone is America/Los_Angeles
-    const recipent_email = "mooncode610@gmail.com";
-
+const sendTime = "17-00";           //time to send mail : 17h 00m
+export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[1]} ${sendTime.split("-")[0]} * * *`).onRun((context) => {             //default timezone is America/Los_Angeles
+    const recipent_email_list = ["armin@learnwithsocrates.com", "brian@learnwithsocrates.com", "candy@learnwithsocrates.com"];
+    const recipent_email_string = recipent_email_list.toString();
     const mailOptions = {
         from: '"customerservice" <customerservice@learnwithsocrates.com>',
-        to: recipent_email,
+        to: recipent_email_string,
         subject: 'Chip Leader Coaching AI Report',
         html: htmlmail
     };
