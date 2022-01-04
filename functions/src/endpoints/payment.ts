@@ -246,8 +246,7 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
 export const reActiveSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      console.log("===========================web hook==================================");
-      console.log(request.body);
+     
       try{
         const { id } = request.body;
         const connection = await connect();
@@ -279,9 +278,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
       const sig = request.headers["stripe-signature"];
-
       const endpointSecret = getStripeKey.hook_secret(stripe_env);
-
       let event;
       try {
         event = stripe.webhooks.constructEvent(
@@ -293,7 +290,6 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
         response.send({ status: "error" });
         return;
       }
-
       const intent: any = event.data.object;
 
       switch (event.type) {
@@ -304,7 +300,11 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           let user = await repoUsers.findOne({
             email: intent.charges.data[0].billing_details.email,
           });
-
+          if(!user) {
+            response.send({ status: "error", message: "Current user was deleted on database" });
+            return;
+          }
+          
           const payment = {
             ...user.payment,
             id: intent.id,
