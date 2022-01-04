@@ -11,3 +11,4 @@ export * from './endpoints/opened';
 // @ts-ignore
 export * from './mail/welcome';
 export * from './mail/payment';
+export * from './mail/report';
