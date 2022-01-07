@@ -186,7 +186,7 @@ export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
       const token = all.id ? getTokenFunc(all.id, all.email): "";
       all.lastLoginAt = new Date();
       response.send({...all, token: token});
-      if(!!all.id) all.save();
+      if(!!all.id) repo.save(all);
     }, false);
   }
 );
@@ -212,7 +212,6 @@ export const updateUser = functions.runWith(runtimeOpts).https.onRequest(
       all.avatar = avatar;
       all.email = email;
       const saved = await repo.save(all);
-
       response.send(saved);
     });
   }
