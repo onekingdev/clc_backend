@@ -71,6 +71,11 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: customer.id,
       }).catch(console.log);
+    /*--------------- delete last payment -S-------------------------------------------------*/
+      if(user.payment.canceled !== true) {
+        stripe.customers.del(user.payment.customerID)
+      }
+    /*--------------- delete last payment -E-------------------------------------------------*/
 
       let subscription;
       console.log("user.payment.canceled ", user.payment.canceled )
@@ -180,6 +185,15 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       /*--------------- delete old paymentmenthod from payments method list in stripe -S----------------------*/
       await stripe.paymentMethods.detach(paymentMethod.id);
       /*--------------- delete old paymentmenthod from payments method list in stripe -E----------------------*/
+
+      /*--------------- cancel last payment -S-------------------------------------------------*
+      const { subscriptionID } = user.payment;
+      if(!user.payment.canceled) {
+        await stripe.subscriptions.update(subscriptionID,{
+          cancel_at_period_end: true
+        })
+      }
+      /*--------------- cancel last payment -E-------------------------------------------------*/
 
       /*--------------- upgrade payment method in database -S------------------------------*/
       const paymentDetails = {
@@ -309,7 +323,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             created: intent.created,
             amount: intent.amount,
             subscription: new Date(
-              moment().add(35, "days").format("YYYY/MM/DD")
+              moment().add(30, "days").format("YYYY/MM/DD")
             ),
           };
 

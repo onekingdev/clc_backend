@@ -37,6 +37,7 @@ export const vimeoDataExtractor = async (url: string) => {
 
 export const parseHandHistory = (record: string) => {
   if (record === "") return { noHandHistory: true };
+  
   const seatRegex =
     /Seat\s+[#?|\']?(?<seat_number>\d+)\'?:\s+(?<seat_name>[a-zA-Z0-9!@#\$%\^\&*\)\(+=._/\-\s\']*)\s+\(\s*(?<seat_amount>\S+(\s+\S+)*)\s*\)/;
   const seatAmountRegex = /(?<seat_amount>(\d{1,3}(\,\d{1,3})*)*(\.\d{1,2})?)/;
@@ -71,7 +72,7 @@ export const parseHandHistory = (record: string) => {
     .map((p) => `\\b${p.name.replace(" ", "\\s+")}\\b`)
     .join("|");
   const handRegex = new RegExp(
-    `(?<seat_name>${words})\\:?\\s+(?<hand>[A-Za-z]+(\\s+[A-Za-z]+)*)(\\s*)\\[?(\\s*)(?<seat_amount>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?\\s*(?<to>([a-zA-Z]*))?\s*(?<seat_amount_2>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?(\\s*)\\]?`   //\s*${words}\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*
+    `(?<seat_name>${words})\\:?\\s+(?<hand>[A-Za-z]+(\\s+[A-Za-z]+)*)(\\s*)\\[?(\\s*)(?<seat_amount>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[a-zA-Z0-9\\,\\$\\s]*)?\\s*(?<to>([a-zA-Z]*))?\s*(?<seat_amount_2>(([0-9]{1,3}(\\,[0-9]{1,3})*)*(\\.[0-9]{1,2})?)|[0-9\\,\\$\\s]*)?(\\s*)\\]?(?<other>[A-Za-z]+(\\s+[A-Za-z]+)*)?`   //\s*${words}\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*
   );
   const dealRegex = new RegExp(
     `\\bDealt\\b\\s+\\bto\\b\\s+(?<seat_name>${words})\\s+\\[*\\s*(?<cards>[a-zA-Z0-9]{2}(\\,?\\s*[a-zA-Z0-9]{2})*)\\s*\\]*`
@@ -83,8 +84,9 @@ export const parseHandHistory = (record: string) => {
   for (let i = 0; i < records.length; i++) {
     const line = records[i];
     let result = flopRegex.exec(line)?.groups;
-
+    
     if (result && result.description) {
+
       if (result.description === "Dealing Flop") {
         flop = result.cards_0.replace(/ /g, "").split(",");
         flopIndex = i;
@@ -110,7 +112,6 @@ export const parseHandHistory = (record: string) => {
   for (let i = 0; i < records.length; i++) {
     const line = records[i];
     let result = dealRegex.exec(line)?.groups;
-
     if (result) {
       if (mapPlayers[result.seat_name]) {
         mapPlayers[result.seat_name].cards = result.cards.split(/, | \s*/);
@@ -124,11 +125,11 @@ export const parseHandHistory = (record: string) => {
   let lastAmount = {
     max: 0
   };
+  let amount_remain = [];
   for (let i = 0; i < records.length; i++) {
     const line = records[i];
     let result = handRegex.exec(line)?.groups;
     if (result) {
-
       if (
         result.hand.trim() === "posts small blind" ||
         result.hand.trim() === "posts the small blind"
@@ -162,6 +163,7 @@ export const parseHandHistory = (record: string) => {
         result.hand.trim() === "bets" ||
         result.hand.trim() === "is allIn"
       ) {
+        
         if(result.hand.trim() === "bets") lastAmount = {max : 0}
         // if(result.hand.trim() === "raises" && reul)
 
@@ -169,10 +171,16 @@ export const parseHandHistory = (record: string) => {
         let totalChips = mapPlayers[result.seat_name].initAmount;
         let playerName = result.seat_name;
         if(lastAmount[player] == undefined)  lastAmount[player] = 0;
-        // console.log(lastAmount[player] == undefined, playerName, lastAmount[player], lastAmount);
+        if(amount_remain[player] == undefined) amount_remain[player]=totalChips;
         let action = result.hand.trim();
         let copyAction = result.hand.trim();
         let amount = result.seat_amount ? parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
+        if(result.other?.includes("allIn")) {
+          result.hand === "raises";
+          amount = amount_remain[player];
+          action = "all-in";
+          copyAction = "all-in";
+        }
         if(result.seat_amount_2 && result.seat_amount_2!=' ') {
           amount = parseInt(result.seat_amount_2.replace(/,/g, ""), 10)
           result.hand = "raises to";
@@ -183,8 +191,13 @@ export const parseHandHistory = (record: string) => {
         }
         // let amount = !!result.seat_amount  ? (!!result.seat_amount_2 && result.seat_amount_2!=' ') ? parseInt(result.seat_amount_2.replace(/,/g, ""), 10) - parseInt(result.seat_amount.replace(/,/g, ""), 10) : parseInt(result.seat_amount.replace(/,/g, ""), 10) : 0;
 
-        if(result.hand.trim() === "raises to") {
-          amount = amount - lastAmount[player];
+        // if(result.hand.trim() === "raises") {
+        //   console.log('----------------in raises--------------', amount_remain[player])
+        //   amount = amount_remain[player];
+        // }
+        if(result.other?.includes("allIn")) {
+          action = "all-in";
+          copyAction = "all-in"
         }
         let copyAmount = amount;
         // let displayAmount = (amount == 0 ) ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
@@ -208,6 +221,7 @@ export const parseHandHistory = (record: string) => {
         });
         lastAmount[player] = (result.hand.trim() === "posts ante" || result.hand.trim() === "posts the ante" ) ? 0 : displayAmount; 
         if(lastAmount.max < lastAmount[player]) lastAmount.max = lastAmount[player];
+        amount_remain[player] = amount_remain[player] - hands[hands.length - 1].amount;
       }
 
       if (flopIndex > 0 && flopIndex - 1 === i) {
@@ -314,3 +328,13 @@ export const calculateOrderAmount = (items: { id: string }[]) => {
       return null;
   }
 };
+
+export const createDailyPwd = () => {
+  // const now = new Date();
+  // const key = process.env.SECRET_KEY;
+}
+
+export const chkDailyPwd = () => {
+  // const now = new Date();
+  // const key = process.env.SECRET_KEY;
+}
