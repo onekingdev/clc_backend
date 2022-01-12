@@ -28,6 +28,7 @@
     "moment": "^2.29.1",
     "mysql": "^2.18.1",
     "nodemailer": "^6.4.17",
+    "string-crypto": "^2.0.2",
     "stripe": "^8.133.0",
     "typeorm": "^0.2.29"
   },

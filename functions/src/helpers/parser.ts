@@ -1,5 +1,6 @@
 import axios from "axios";
 require("dotenv").config();
+var crypto = require('crypto');
 let URL = require("url").URL;
 
 export const vimeoDataExtractor = async (url: string) => {
@@ -330,11 +331,46 @@ export const calculateOrderAmount = (items: { id: string }[]) => {
 };
 
 export const createDailyPwd = () => {
-  // const now = new Date();
-  // const key = process.env.SECRET_KEY;
+  const now = new Date();
+  const key = process.env.SECRET_KEY;
+  var algorithm = 'aes256';
+  var cipher = crypto.createCipher(algorithm, key);  
+  var encrypted = cipher.update(''+now.getTime(), 'utf8', 'hex') + cipher.final('hex');
+  return encrypted;
 }
 
-export const chkDailyPwd = () => {
-  // const now = new Date();
-  // const key = process.env.SECRET_KEY;
+export const chkDailyPwd = (password: string) => {
+
+  const algorithm = 'aes256';
+  const report_time = process.env.REPORT_TIME;
+  const now = new Date();
+  let today = new Date();
+  today.setDate(now.getDate());
+  today.setHours(parseInt(report_time.split("-")[0]))
+  today.setMinutes(parseInt(report_time.split("-")[1]))
+  today.setSeconds(0);
+  let yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  yesterday.setHours(parseInt(report_time.split("-")[0]))
+  yesterday.setMinutes(parseInt(report_time.split("-")[1]))
+  yesterday.setSeconds(0);
+  let tomorrow = new Date();
+  yesterday.setDate(now.getDate() + 1);
+  yesterday.setHours(parseInt(report_time.split("-")[0]))
+  yesterday.setMinutes(parseInt(report_time.split("-")[1]))
+  yesterday.setSeconds(0);
+  const key = process.env.SECRET_KEY;
+  var decipher = crypto.createDecipher(algorithm, key);
+  try{
+    var dateFromRequest = new Date(parseInt(decipher.update(password, 'hex', 'utf8') + decipher.final('utf8')));
+  }
+  catch(e) {
+    return false;
+  }
+  console.log(dateFromRequest, today, yesterday);
+  if(dateFromRequest > today && dateFromRequest < tomorrow || dateFromRequest <= today &&  dateFromRequest >= yesterday) {
+    return true;
+  } else {
+    return false;
+  }
 }

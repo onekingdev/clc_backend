@@ -4,9 +4,9 @@ const nodemailer = require('nodemailer');
 import { connect, runtimeOpts } from "../../config";
 import { Users } from "../../entities/Users";
 import { Earnings } from "../../entities/Earnings"
-import {applyMiddleware} from "../../middleware"
+import { applyMiddleware } from "../../middleware"
 import { template } from "./template"
-
+import { createDailyPwd } from "../../helpers/parser"
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';
 
@@ -18,12 +18,13 @@ const mailTransport = nodemailer.createTransport({
     },
 });
 
-const sendTime = "17-00";           //time to send mail : 17h 00m
+const sendTime = process.env.REPORT_TIME;
 export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[1]} ${sendTime.split("-")[0]} * * *`).onRun(async (context) => {             //default timezone is America/Los_Angeles
     const recipent_email_list = ["armin@learnwithsocrates.com", "brian@learnwithsocrates.com", "candy@learnwithsocrates.com"];
-    let today = new Date();
-    let yesterday = new Date((new Date()).setDate(today.getDate() - 1));
+    const today = new Date();
+    const yesterday = new Date((new Date()).setDate(today.getDate() - 1));
     const connection = await connect();
+    const dailyPassword = createDailyPwd();
     const all = await connection
             .createQueryBuilder(Users, "users")
             .addSelect("earnings.correct", "earnings_correct")
@@ -89,7 +90,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
                 from: '"customerservice" <customerservice@learnwithsocrates.com>',
                 to: value,
                 subject: 'Chip Leader Coaching AI Report',
-                html: template(createdUsersCount, loginedUsers, yesterday, today)
+                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword)
             };
             await mailTransport.sendMail(mailOptions);
         })
@@ -100,13 +101,13 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         return null;
 });
 
-
 export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onRequest(
     async (request, response) => {
       applyMiddleware(request, response, async () =>{
         const recipent_email_list = ["armin@learnwithsocrates.com", "candy@learnwithsocrates.com","viridiana.rivera@learnwithsocrates.com"];
-        let today = new Date();
-        let yesterday = new Date((new Date()).setDate(today.getDate() - 1));
+        const today = new Date();
+        const yesterday = new Date((new Date()).setDate(today.getDate() - 1));
+        const dailyPassword = createDailyPwd();
         const connection = await connect();
         const all = await connection
             .createQueryBuilder(Users, "users")
@@ -172,7 +173,7 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
                     from: '"customerservice" <customerservice@learnwithsocrates.com>',
                     to: value,
                     subject: 'Chip Leader Coaching AI Report',
-                    html: template(createdUsersCount, loginedUsers, yesterday, today)
+                    html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword)
                 };
                 await mailTransport.sendMail(mailOptions);
             })

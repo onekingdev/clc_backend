@@ -1,4 +1,4 @@
-export const template = (createdUsersCount, loginedUsers, from, to) => {
+export const template = (createdUsersCount, loginedUsers, from, to, dailyPassword) => {
     const today = new Date();
     const title = `This is the CLC(${process.env.GCLOUD_PROJECT}) Report on ${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
     const date = `( ${from} ~ ${to} )`;
@@ -60,6 +60,8 @@ export const template = (createdUsersCount, loginedUsers, from, to) => {
         <p><center>${date}<center></p>
         <p><center>${brief}<center></p>
         ${table}
+        <p><center>Password : ${dailyPassword}<center></p>
+
         </body>
         </html>
     `    

@@ -4,6 +4,7 @@ import { Users } from "../entities/Users";
 import { ActivationCodes } from "../entities/ActivationCodes";
 import { Topics } from "../entities/Topics";
 import {applyMiddleware} from "../middleware"
+import { createDailyPwd,chkDailyPwd } from "../helpers/parser"
 const jwt = require('jsonwebtoken');
 
 
@@ -214,5 +215,16 @@ export const updateUser = functions.runWith(runtimeOpts).https.onRequest(
       const saved = await repo.save(all);
       response.send(saved);
     });
+  }
+);
+
+export const checkDailyPassword = functions.runWith(runtimeOpts).https.onRequest(
+  async (request, response) => {
+    applyMiddleware(request, response, async () =>{
+      const { password } = request.body;
+      console.log(password, createDailyPwd());
+      if(chkDailyPwd(password)) response.send({ success : true })
+      else response.send({ success : false })
+    }, false);
   }
 );
