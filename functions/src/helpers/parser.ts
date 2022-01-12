@@ -367,7 +367,6 @@ export const chkDailyPwd = (password: string) => {
   catch(e) {
     return false;
   }
-  console.log(dateFromRequest, today, yesterday);
   if(dateFromRequest > today && dateFromRequest < tomorrow || dateFromRequest <= today &&  dateFromRequest >= yesterday) {
     return true;
   } else {

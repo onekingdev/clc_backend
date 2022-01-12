@@ -9,6 +9,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
         tableContent += `
             <tr>
                 <td>${loginedUser['users_email']}</td>
+                <td>${loginedUser['users_createdAt']}</td>
                 <td>${loginedUser['users_lastLoginAt']}</td>
                 <td>${loginedUser['users_correctQuestions']}</td>
                 <td>${loginedUser['users_wrongQuestions']}</td>
@@ -19,6 +20,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
     <table id="customers">
         <tr>
             <th>User Name</th>
+            <th>Create Time</th>
             <th>Login Time</th>
             <th>Correct Answered Questions</th>
             <th>Wrong Answered Questions</th>

@@ -72,7 +72,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
         customer: customer.id,
       }).catch(console.log);
     /*--------------- delete last payment -S-------------------------------------------------*/
-      if(user.payment.canceled !== true) {
+      if(user.payment.customerID && user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
       }
       

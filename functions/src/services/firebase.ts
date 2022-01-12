@@ -3,6 +3,7 @@ import 'firebase/auth';
 
 let app;
 /*------------------ developement -S------------------*/
+console.log(process.env.GCLOUD_PROJECT)
 if(process.env.GCLOUD_PROJECT == "devenvclc") {
     app = firebase.default.initializeApp( {
         apiKey: "AIzaSyBRoGNgYCTGL7jZnQZ_wDq2OkibJP_L-gE",
