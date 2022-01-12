@@ -75,6 +75,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       if(user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
       }
+      
     /*--------------- delete last payment -E-------------------------------------------------*/
 
       let subscription;
