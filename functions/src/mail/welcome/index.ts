@@ -30,8 +30,6 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
 
     try {
         mailTransport.sendMail(mailOptions);
-        console.log('mail sent!');
-
     } catch(error) {
         console.error('There was an error while sending the email:', error);
     }

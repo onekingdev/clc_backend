@@ -383,7 +383,7 @@ export const getQuestionsProgressbar = functions.https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
       const connection = await connect();
-      const { type, UID, user, today } = request.body;
+      const { type, UID, user } = request.body;
 
       let all,
         progressIndex = 0,
@@ -459,7 +459,6 @@ export const getQuestionsProgressbar = functions.https.onRequest(
             //.setParameters({ date: today})
             .orderBy("earnings.createdAt", "ASC")
             .getRawMany();
-          console.log(today);
           break;
       }
       if (type === "ai") {

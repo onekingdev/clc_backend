@@ -16,8 +16,14 @@ export class PaymentHistory extends BaseEntity {
 
   @Column()
   amount: number;
+  
+  @Column()
+  amount_captured: number;
 
   @Column()
-  subscription: string;
+  payment_id: string;
+
+  @Column()
+  customer_id: string;
 
 }

@@ -27,8 +27,6 @@ export const sendSubscriptionEmail = (email: string) => {
 
     try {
         mailTransport.sendMail(mailOptions);
-        console.log('mail send');
-
     } catch(error) {
         console.error('There was an error while sending the email:', error);
     }
