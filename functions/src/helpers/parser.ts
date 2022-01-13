@@ -203,6 +203,7 @@ export const parseHandHistory = (record: string) => {
         if(result.hand.trim() === "raises to") {
           amount = amount - lastAmount[player];
         }
+        
         let copyAmount = amount;
         // let displayAmount = (amount == 0 ) ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
         let displayAmount = (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
@@ -358,10 +359,10 @@ export const chkDailyPwd = (password: string) => {
   yesterday.setMinutes(parseInt(report_time.split("-")[1]))
   yesterday.setSeconds(0);
   let tomorrow = new Date();
-  tomorrow.setDate(now.getDate() + 1);
-  tomorrow.setHours(parseInt(report_time.split("-")[0]))
-  tomorrow.setMinutes(parseInt(report_time.split("-")[1]))
-  tomorrow.setSeconds(0);
+  yesterday.setDate(now.getDate() + 1);
+  yesterday.setHours(parseInt(report_time.split("-")[0]))
+  yesterday.setMinutes(parseInt(report_time.split("-")[1]))
+  yesterday.setSeconds(0);
   const key = process.env.SECRET_KEY;
   var decipher = crypto.createDecipher(algorithm, key);
   try{
