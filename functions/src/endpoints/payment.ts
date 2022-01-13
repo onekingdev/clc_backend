@@ -12,7 +12,15 @@ import { stripe_env, runtimeOpts } from "../config";
 import { ActivationCodes } from "../entities/ActivationCodes";
 import {applyMiddleware} from "../middleware"
 import {newPaymentOperateEvent} from "../helpers/event"
-
+import  { payment_action_intent_succeeded, 
+          payment_action_intent_payment_failed,
+          payment_action_new_subscription,
+          payment_action_new_subscription_reactivate,
+          payment_action_cancel_subscription,
+          payment_action_reactivate_canceled_subscription,
+          payment_action_update_paymentMethod,
+          payment_action_delete_customer,
+          payment_action_other } from "../helpers/constants"
 // @ts-ignore
 const stripe = new Stripe(
   process.env.NODE_ENV == "production" ? 
@@ -74,7 +82,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
     /*--------------- delete last payment -S-------------------------------------------------*/
       if(user.payment.customerID && user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
-        newPaymentOperateEvent(user.email, "delete_customer", 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_delete_customer, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
       }
       
     /*--------------- delete last payment -E-------------------------------------------------*/
@@ -139,7 +147,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       const status = subscription["status"];
       const client_secret = subscription["client_secret"];
       
-      newPaymentOperateEvent(user.email, reactivate ? "new_subscription_reactivate" : "new_subscription", 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+      newPaymentOperateEvent(user.email, reactivate ? payment_action_new_subscription_reactivate : payment_action_new_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
 
       response.send({ client_secret: client_secret, status: status });
     });
@@ -211,7 +219,7 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
 
       user.payment.paymentMethod = paymentDetails;
       await repo.save(user);
-      newPaymentOperateEvent(user.email, "update_paymentMethod", 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+      newPaymentOperateEvent(user.email, payment_action_update_paymentMethod, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
       response.send({success: true,data:res});
 
     });
@@ -252,7 +260,7 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
               };
           await repo.save(user);
         }
-        newPaymentOperateEvent(user.email, "cancel_subscription", 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
         response.send({success: true,data:canceled});
       } catch(err) {
         response.send({success:false, message:err.raw.message})
@@ -285,7 +293,7 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
           await repo.save(user);
         }
         response.send({success: true,data:updatedSubscription});
-        newPaymentOperateEvent(user.email, "reactivate_canceled_subscription", 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_reactivate_canceled_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
       } catch(err) {
         response.send({success:false, message:err.raw.message})
       }
@@ -351,8 +359,11 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           console.log("Failed:", intent.id, message);
           break;
       }
-      
-      newPaymentOperateEvent(intent.charges.data[0].billing_details.email, event.type, intent.amount, intent.amount_captured, intent.charges.data[0].paymentMethod, intent.charges.data[0].customer, subscriptionFinishDate)
+      const eventType = {
+        "payment_intent.succeeded" : payment_action_intent_succeeded,
+        "payment_intent.payment_failed" : payment_action_intent_payment_failed
+      }
+      newPaymentOperateEvent(intent.charges.data[0].billing_details.email, eventType[event.type] ? eventType[event.type] : payment_action_other, intent.amount, intent.amount_captured, intent.charges.data[0].paymentMethod, intent.charges.data[0].customer, subscriptionFinishDate)
       
       response.send({ status: "success" });
     }, false);
