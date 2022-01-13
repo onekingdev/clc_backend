@@ -4,11 +4,9 @@ const nodemailer = require('nodemailer');
 import { connect, runtimeOpts } from "../../config";
 import { Users } from "../../entities/Users";
 import { Earnings } from "../../entities/Earnings"
-import { PaymentHistory } from "../../entities/PaymentHistory";
 import { applyMiddleware } from "../../middleware"
 import { template } from "./template"
 import { createDailyPwd } from "../../helpers/parser"
-
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';
 
@@ -86,20 +84,6 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
     }
     /*------------------------------- group repeated users to one -E--------------------------------------------------------*/
     
-    /*------------------------------- payment history -S----------------------------------------------------------------------*/
-    
-    const paymentHistory = await connection
-        .createQueryBuilder(PaymentHistory, "paymentHistory")
-        .where("paymentHistory.createdAt between :startDate and :endDate")
-        .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
-        .orderBy("paymentHistory.action")
-        .getRawMany();
-    console.log(paymentHistory);
-    // for(let row of paymentHistory) {
-
-    // }
-    /*------------------------------- payment history -E----------------------------------------------------------------------*/
-
     try {
         recipent_email_list.forEach(async function(value, index){
             const mailOptions = {

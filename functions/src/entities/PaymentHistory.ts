@@ -9,7 +9,7 @@ export class PaymentHistory extends BaseEntity {
   email: string;
 
   @Column()
-  action: number;
+  action: boolean;
 
   @Column()
   createdAt: Date;
@@ -25,8 +25,5 @@ export class PaymentHistory extends BaseEntity {
 
   @Column()
   customer_id: string;
-
-  @Column()
-  subscriptionFinishAt: Date;
 
 }
