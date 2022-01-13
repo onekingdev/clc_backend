@@ -320,12 +320,12 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       // }
 
       const intent: any = event.data.object;
-      let subscriptionFinishDate = new Date("0000-00-00");
+      let subscriptionFinishDate = new Date(0);
+      const connection = await connect();
+      const repoUsers = connection.getRepository(Users);
 
       switch (event.type) {
-        case "payment_intent.succeeded":
-          const connection = await connect();
-          const repoUsers = connection.getRepository(Users);
+        case "payment_intent.succeeded":{
 
           let user = await repoUsers.findOne({
             email: intent.charges.data[0].billing_details.email,
@@ -354,18 +354,32 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           sendSubscriptionEmail(intent.charges.data[0].billing_details.email);
 
           break;
-        case "payment_intent.payment_failed":
+        }
+        case "payment_intent.payment_failed":{
           const message =
-            intent.last_payment_error && intent.last_payment_error.message;
+          intent.last_payment_error && intent.last_payment_error.message;
           console.log("Failed:", intent.id, message);
+
+          let user = await repoUsers.findOne({
+            email: intent.charges.data[0].billing_details.email,
+          });
+          subscriptionFinishDate = user.payment.subscription;
           break;
+        }
+          
       }
       const eventType = {
         "payment_intent.succeeded" : payment_action_intent_succeeded,
         "payment_intent.payment_failed" : payment_action_intent_payment_failed
       }
-      newPaymentOperateEvent(intent.charges.data[0].billing_details.email, eventType[event.type] ? eventType[event.type] : payment_action_other, intent.amount, intent.amount_captured, intent.charges.data[0].payment_method, intent.charges.data[0].customer, subscriptionFinishDate)
-      
+      const email = intent.charges.data[0].billing_details.email;
+      const type = eventType[event.type] !== undefined ? eventType[event.type] : payment_action_other;
+      const amount = intent.amount;
+      const amount_captured = intent.amount_captured;
+      const payment_id = intent.charges.data[0].payment_method;
+      const customer_id = intent.charges.data[0].customer;
+      const err_msg = eventType[event.type] == payment_action_intent_payment_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
+      newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscriptionFinishDate, err_msg);
       response.send({ status: "success" });
     }, false);
   }
