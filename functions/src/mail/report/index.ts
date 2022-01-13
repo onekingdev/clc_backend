@@ -94,9 +94,10 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
         .orderBy("paymentHistory.action")
         .getRawMany();
-    for(let row of paymentHistory) {
+    console.log(paymentHistory);
+    // for(let row of paymentHistory) {
 
-    }
+    // }
     /*------------------------------- payment history -E----------------------------------------------------------------------*/
 
     try {

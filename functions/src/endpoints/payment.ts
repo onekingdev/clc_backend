@@ -304,19 +304,20 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
 export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      const sig = request.headers["stripe-signature"];
-      const endpointSecret = getStripeKey.hook_secret(stripe_env);
-      let event;
-      try {
-        event = stripe.webhooks.constructEvent(
-          request.rawBody,
-          sig,
-          endpointSecret
-        );
-      } catch (err) {
-        response.send({ status: "error" });
-        return;
-      }
+      // const sig = request.headers["stripe-signature"];
+      // const endpointSecret = getStripeKey.hook_secret(stripe_env);
+      // let event;
+      let event = request.body;
+      // try {
+      //   event = stripe.webhooks.constructEvent(
+      //     request.rawBody,
+      //     sig,
+      //     endpointSecret
+      //   );
+      // } catch (err) {
+      //   response.send({ status: "error" });
+      //   return;
+      // }
 
       const intent: any = event.data.object;
       let subscriptionFinishDate = new Date("0000-00-00");
@@ -363,7 +364,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
         "payment_intent.succeeded" : payment_action_intent_succeeded,
         "payment_intent.payment_failed" : payment_action_intent_payment_failed
       }
-      newPaymentOperateEvent(intent.charges.data[0].billing_details.email, eventType[event.type] ? eventType[event.type] : payment_action_other, intent.amount, intent.amount_captured, intent.charges.data[0].paymentMethod, intent.charges.data[0].customer, subscriptionFinishDate)
+      newPaymentOperateEvent(intent.charges.data[0].billing_details.email, eventType[event.type] ? eventType[event.type] : payment_action_other, intent.amount, intent.amount_captured, intent.charges.data[0].payment_method, intent.charges.data[0].customer, subscriptionFinishDate)
       
       response.send({ status: "success" });
     }, false);
