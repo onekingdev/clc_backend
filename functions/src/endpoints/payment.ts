@@ -304,20 +304,20 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
 export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      // const sig = request.headers["stripe-signature"];
-      // const endpointSecret = getStripeKey.hook_secret(stripe_env);
-      // let event;
-      let event = request.body;
-      // try {
-      //   event = stripe.webhooks.constructEvent(
-      //     request.rawBody,
-      //     sig,
-      //     endpointSecret
-      //   );
-      // } catch (err) {
-      //   response.send({ status: "error" });
-      //   return;
-      // }
+      const sig = request.headers["stripe-signature"];
+      const endpointSecret = getStripeKey.hook_secret(stripe_env);
+      let event;
+      // let event = request.body;
+      try {
+        event = stripe.webhooks.constructEvent(
+          request.rawBody,
+          sig,
+          endpointSecret
+        );
+      } catch (err) {
+        response.send({ status: "error" });
+        return;
+      }
 
       const intent: any = event.data.object;
       let subscriptionFinishDate = new Date(0);
