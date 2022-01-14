@@ -101,16 +101,13 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
     /*------------------------------- payment history -E----------------------------------------------------------------------*/
 
     try {
-        recipent_email_list.forEach(async function(value, index){
-            const mailOptions = {
-                from: '"customerservice" <customerservice@learnwithsocrates.com>',
-                to: value,
-                subject: 'Chip Leader Coaching AI Report',
-                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, 0, 0, [])
-            };
-            await mailTransport.sendMail(mailOptions);
-        })
-        console.log("report mail sent")
+        const mailOptions = {
+            from: '"customerservice" <customerservice@learnwithsocrates.com>',
+            to: recipent_email_list,
+            subject: 'Chip Leader Coaching AI Report',
+            html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, 0, 0, [])
+        };
+        await mailTransport.sendMail(mailOptions);
     } catch(error) {
         console.log("report mail error", error)
     }
@@ -211,15 +208,13 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
         response.send(template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory));    
         
         try {
-            recipent_email_list.forEach(async function(value, index){
-                const mailOptions = {
-                    from: '"customerservice" <customerservice@learnwithsocrates.com>',
-                    to: value,
-                    subject: 'Chip Leader Coaching AI Report',
-                    html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
-                };
-                await mailTransport.sendMail(mailOptions);
-            })
+            const mailOptions = {
+                from: '"customerservice" <customerservice@learnwithsocrates.com>',
+                to: recipent_email_list,
+                subject: 'Chip Leader Coaching AI Report',
+                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
+            };
+            await mailTransport.sendMail(mailOptions);
             response.send({success: 200, message: 'report mail sent', all:all});    
         } catch(error) {
             response.send({error: 400, message: error});
