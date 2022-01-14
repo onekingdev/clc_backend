@@ -9,6 +9,9 @@ export class PaymentHistory extends BaseEntity {
   email: string;
 
   @Column()
+  user_id: number;
+
+  @Column()
   action: number;
 
   @Column()
