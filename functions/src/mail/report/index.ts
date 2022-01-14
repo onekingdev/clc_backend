@@ -8,7 +8,7 @@ import { PaymentHistory } from "../../entities/PaymentHistory";
 import { applyMiddleware } from "../../middleware"
 import { template } from "./template"
 import { createDailyPwd } from "../../helpers/parser"
-
+import { payment_action_intent_succeeded, payment_action_intent_failed } from "../../helpers/constants";
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';
 
@@ -96,7 +96,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         .getRawMany();
     console.log(paymentHistory);
     // for(let row of paymentHistory) {
-
+        
     // }
     /*------------------------------- payment history -E----------------------------------------------------------------------*/
 
@@ -106,7 +106,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
                 from: '"customerservice" <customerservice@learnwithsocrates.com>',
                 to: value,
                 subject: 'Chip Leader Coaching AI Report',
-                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword)
+                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, 0, 0, [])
             };
             await mailTransport.sendMail(mailOptions);
         })
@@ -120,6 +120,10 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
 export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onRequest(
     async (request, response) => {
       applyMiddleware(request, response, async () =>{
+        let pay_succ_count = 0;
+        let pay_fail_count = 0;
+        let loginedUsers = [];
+        let createdUsersCount = 0;
         const recipent_email_list = ["armin@learnwithsocrates.com", "candy@learnwithsocrates.com","viridiana.rivera@learnwithsocrates.com"];
         const today = new Date();
         const yesterday = new Date((new Date()).setDate(today.getDate() - 1));
@@ -163,8 +167,7 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
                     ORDER BY
                         users.id ASC
                     -------------------------------------------------------------*/
-        let loginedUsers = [];
-        let createdUsersCount = 0;
+        
 
         /*------------------------------- group repeated users to one -S--------------------------------------------------------*/
         for(let row of all) {
@@ -183,13 +186,37 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             }
         }
         /*------------------------------- group repeated users to one -E--------------------------------------------------------*/
+        
+        /*------------------------------- payment history -S----------------------------------------------------------------------*/
+    
+        const paymentHistory = await connection
+        .createQueryBuilder(PaymentHistory, "paymentHistory")
+        .where("createdAt between :startDate and :endDate")
+        .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
+        .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
+        .orderBy("action")
+        .getRawMany();
+        
+        for(let row of paymentHistory) {
+            if(row.paymentHistory_action == payment_action_intent_succeeded) {
+                pay_succ_count ++;
+            }
+            else if(row.paymentHistory_action == payment_action_intent_failed) {
+                pay_fail_count ++;
+            }
+            else break;
+        }
+        /*------------------------------- payment history -E----------------------------------------------------------------------*/
+
+        response.send(template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory));    
+        
         try {
             recipent_email_list.forEach(async function(value, index){
                 const mailOptions = {
                     from: '"customerservice" <customerservice@learnwithsocrates.com>',
                     to: value,
                     subject: 'Chip Leader Coaching AI Report',
-                    html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword)
+                    html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
                 };
                 await mailTransport.sendMail(mailOptions);
             })

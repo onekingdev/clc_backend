@@ -1,22 +1,39 @@
-export const template = (createdUsersCount, loginedUsers, from, to, dailyPassword) => {
+import moment = require("moment");
+import { payment_action_intent_succeeded, 
+         payment_action_intent_failed, 
+         payment_action_new_subscription, 
+         payment_action_new_subscription_reactivate, 
+         payment_action_cancel_subscription,
+         payment_action_reactivate_canceled_subscription,
+         payment_action_update_paymentMethod,
+         payment_action_delete_customer,
+        //  payment_action_other
+        } from "../../helpers/constants";
+
+
+export const template = (createdUsersCount, loginedUsers, from, to, dailyPassword, paySuccCount, payFailCount, paymentHistory) => {
     const today = new Date();
-    const title = `This is the CLC(${process.env.GCLOUD_PROJECT}) Report on ${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
+
+    from = moment(from).format('YYYY-MM-DD  hh:mm:ss')
+    to = moment(to).format('YYYY-MM-DD  hh:mm:ss')
+
+    const title = `CLC(${process.env.GCLOUD_PROJECT}) Report on ${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
     const date = `( ${from} ~ ${to} )`;
     const brief = `Today ${createdUsersCount} new users were registered and ${loginedUsers.length} users logined at the site.`
-    
-    let tableContent = '';
+    const payHistoryBrief = `Today ${paySuccCount} payments were successful and ${payFailCount} payments were failed.`
+    let userTableContent = '';
     for(let loginedUser of loginedUsers) {
-        tableContent += `
+        userTableContent += `
             <tr>
                 <td>${loginedUser['users_email']}</td>
-                <td>${loginedUser['users_createdAt']}</td>
-                <td>${loginedUser['users_lastLoginAt']}</td>
+                <td>${moment(loginedUser['users_createdAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${moment(loginedUser['users_lastLoginAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
                 <td>${loginedUser['users_correctQuestions']}</td>
                 <td>${loginedUser['users_wrongQuestions']}</td>
             </tr>
         `;
     }
-    const table = `
+    const userTable = `
     <table id="customers">
         <tr>
             <th>User Name</th>
@@ -25,7 +42,67 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>Correct Answered Questions</th>
             <th>Wrong Answered Questions</th>
         </tr>
-       ${tableContent}
+       ${userTableContent}
+    </table>`;
+
+    let payHistoryTableContent = '';
+    for(let row of paymentHistory) {
+        switch(row['paymentHistory_action']){
+            case payment_action_intent_succeeded :
+                row['paymentHistory_action'] = "Payment Intent Succeed"
+                break;
+            case payment_action_intent_failed :
+                row['paymentHistory_action'] = "Payment Intent Fail"
+                break;
+            case payment_action_new_subscription :
+                row['paymentHistory_action'] = "New Subscription"
+                break;
+            case payment_action_new_subscription_reactivate :
+                row['paymentHistory_action'] = "Reactive Subscription(new)"
+                break;
+            case payment_action_cancel_subscription :
+                row['paymentHistory_action'] = "Cancel Subscription"
+                break;
+            case payment_action_reactivate_canceled_subscription :
+                row['paymentHistory_action'] = "Reactive Canceled Subscription"
+                break;
+            case payment_action_update_paymentMethod :
+                row['paymentHistory_action'] = "Update Card"
+                break;
+            case payment_action_delete_customer :
+                row['paymentHistory_action'] = "Delete Customer"
+                break;
+            // case payment_action_other :
+            //     row['paymentHistory_action'] = "Other"
+            //     break;
+            default:
+                row['paymentHistory_action'] = "Unknown"
+                break;
+                                                                                                                                
+        }
+        payHistoryTableContent += `
+            <tr>
+                <td>${row['paymentHistory_email']}</td>
+                <td>${row['paymentHistory_action']}</td>
+                <td>${moment(row['paymentHistory_createdAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${row['paymentHistory_amount']}</td>
+                <td>${moment(row['paymentHistory_subscriptionFinishAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${row['paymentHistory_error_message']}</td>
+            </tr>
+        `;
+    }
+
+    const payHistoryTable = `
+    <table id="customers">
+        <tr>
+            <th>User Email</th>
+            <th>Action</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Subscription Finish Date</th>
+            <th>Error Message</th>
+        </tr>
+       ${payHistoryTableContent}
     </table>`;
 
     return `
@@ -58,10 +135,12 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
         </head>
         <body>
         
-        <p><center>${title}<center></p>
+        <h2><center>${title}<center></h2>
         <p><center>${date}<center></p>
         <p><center>${brief}<center></p>
-        ${table}
+        ${userTable}
+        <p><center>${payHistoryBrief}<center></p>
+        ${payHistoryTable}
         <p><center>Password : ${dailyPassword}<center></p>
 
         </body>

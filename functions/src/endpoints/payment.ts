@@ -13,7 +13,7 @@ import { ActivationCodes } from "../entities/ActivationCodes";
 import {applyMiddleware} from "../middleware"
 import {newPaymentOperateEvent} from "../helpers/event"
 import  { payment_action_intent_succeeded, 
-          payment_action_intent_payment_failed,
+          payment_action_intent_failed,
           payment_action_new_subscription,
           payment_action_new_subscription_reactivate,
           payment_action_cancel_subscription,
@@ -370,7 +370,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       }
       const eventType = {
         "payment_intent.succeeded" : payment_action_intent_succeeded,
-        "payment_intent.payment_failed" : payment_action_intent_payment_failed
+        "payment_intent.payment_failed" : payment_action_intent_failed
       }
       const email = intent.charges.data[0].billing_details.email;
       const type = eventType[event.type] !== undefined ? eventType[event.type] : payment_action_other;
@@ -378,7 +378,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       const amount_captured = intent.amount_captured;
       const payment_id = intent.charges.data[0].payment_method;
       const customer_id = intent.charges.data[0].customer;
-      const err_msg = eventType[event.type] == payment_action_intent_payment_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
+      const err_msg = eventType[event.type] == payment_action_intent_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
       newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscriptionFinishDate, err_msg);
       response.send({ status: "success" });
     }, false);

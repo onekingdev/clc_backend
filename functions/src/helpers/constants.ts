@@ -1,5 +1,5 @@
 export const payment_action_intent_succeeded = 0;
-export const payment_action_intent_payment_failed = 1;
+export const payment_action_intent_failed = 1;
 export const payment_action_new_subscription = 2;
 export const payment_action_new_subscription_reactivate = 3;
 export const payment_action_cancel_subscription = 4;
