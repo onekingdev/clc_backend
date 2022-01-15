@@ -122,6 +122,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
                 <td>${row['paymentHistory_amount']}</td>
                 <td>${moment(row['paymentHistory_subscription_id']).format('YYYY-MM-DD  hh:mm:ss')}</td>
                 <td>${moment(row['paymentHistory_subscriptionFinishAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${row['coupon_code']}</td>
                 <td>${row['paymentHistory_error_message']}</td>
             </tr>
         `;
@@ -136,6 +137,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>Amount</th>
             <th>Subscription ID</th>
             <th>Subscription Finish Date</th>
+            <th>Coupon Code</th>
             <th>Error Message</th>
         </tr>
        ${payHistoryTableContent}
