@@ -20,6 +20,15 @@ import  { payment_action_intent_succeeded,
           payment_action_reactivate_canceled_subscription,
           payment_action_update_paymentMethod,
           payment_action_delete_customer,
+          payment_action_subscription_create_error,
+          payment_action_customer_create_error,
+          payment_action_payment_attach_error,
+          // payment_action_customer_payUpdate_error,
+          payment_action_subscription_cancel_error,
+          payment_action_subscription_reactive_error,
+          payment_action_webhook_construct_error,
+          payment_action_intent_userDeletedOnDatabase_error,
+          payment_action_intent_subscriptionDeletedOnDatabase_error,
           payment_action_other } from "../helpers/constants"
 // @ts-ignore
 const stripe = new Stripe(
@@ -73,16 +82,20 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
         if(reactivate) customer = {id:user.payment.customerID};
         else {
           response.send({ client_secret: null, status: "invalid_creditcard" });
+          newPaymentOperateEvent(user.email, payment_action_customer_create_error);
           return;
         }
       } 
       await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: customer.id,
-      }).catch(console.log);
+      }).catch((err) => {
+        newPaymentOperateEvent(user.email, payment_action_payment_attach_error, 0, 0, paymentMethod.id, customer.id);
+        
+      });
     /*--------------- delete last payment -S-------------------------------------------------*/
       if(user.payment.customerID && user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
-        newPaymentOperateEvent(user.email, payment_action_delete_customer, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_delete_customer, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
       }
       
     /*--------------- delete last payment -E-------------------------------------------------*/
@@ -104,7 +117,10 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
             ],
             trial_period_days: code.trailDays,
           })
-          .catch((err) => response.send(err));
+          .catch((err) => {
+            newPaymentOperateEvent(user.email, payment_action_subscription_create_error, 0, 0, paymentMethod.id, customer.id)
+            return response.send(err)
+          });
           
       } else {
 
@@ -147,7 +163,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       const status = subscription["status"];
       const client_secret = subscription["client_secret"];
       
-      newPaymentOperateEvent(user.email, reactivate ? payment_action_new_subscription_reactivate : payment_action_new_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+      newPaymentOperateEvent(user.email, reactivate ? payment_action_new_subscription_reactivate : payment_action_new_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
 
       response.send({ client_secret: client_secret, status: status });
     });
@@ -174,6 +190,7 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
         console.log("=============attach failed================");
         isAttachSuccess = false;
         console.log(e.raw);
+        newPaymentOperateEvent(user.email, payment_action_payment_attach_error, 0, 0, newPaymentMethod.id, customerID)
         response.send({success:false, message:e.raw.message})
       });
       /*--------------- add new payment method to payments method list in stripe -E----------------------*/
@@ -188,7 +205,6 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       }).catch(e=> {
         isUpdateSuccess = false;
         response.send({success:false, message:e.raw.message})
-
       })
       /*--------------- upgrade paymentmenthod to  new payment method for customer -E----------------------*/
 
@@ -219,7 +235,7 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
 
       user.payment.paymentMethod = paymentDetails;
       await repo.save(user);
-      newPaymentOperateEvent(user.email, payment_action_update_paymentMethod, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+      newPaymentOperateEvent(user.email, payment_action_update_paymentMethod, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
       response.send({success: true,data:res});
 
     });
@@ -229,29 +245,19 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
 export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
+      const { id } = request.body;
+      const connection = await connect();
+      const repo = connection.getRepository(Users);
+
+      let user = await repo.findOne({ id: id });
       try{
-        const { id } = request.body;
-        const connection = await connect();
-        const repo = connection.getRepository(Users);
-
-        let user = await repo.findOne({ id: id });
         const { subscriptionID } = user.payment;
-        // const subscriptionID = "sub_1Jz44lAT9ya87fpT3lFGFF9o";
-
-        // const deleted = await stripe.subscriptions.del(subscriptionID);
-
-        // if (deleted.status === "canceled") {
-        //   user.payment = {
-        //     ...user.payment,
-        //     canceled: true,
-        //   };
-        //   await repo.save(user);
-        // }
-        // response.send(deleted);
         const canceled = await stripe.subscriptions.update(subscriptionID,{
           cancel_at_period_end: true
         })
+
         let currentPeriodEnd = new Date(canceled.current_period_end * 1000);
+        
         if(canceled.cancel_at_period_end) {
           user.payment = {
                 ...user.payment,
@@ -260,9 +266,10 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
               };
           await repo.save(user);
         }
-        newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
         response.send({success: true,data:canceled});
       } catch(err) {
+        newPaymentOperateEvent(user.email, payment_action_subscription_cancel_error, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
         response.send({success:false, message:err.raw.message})
       } 
     });
@@ -272,13 +279,13 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
 export const reActiveSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-     
+      const { id } = request.body;
+      const connection = await connect();
+      const repo = connection.getRepository(Users);
+
+      let user = await repo.findOne({ id: id });
       try{
-        const { id } = request.body;
-        const connection = await connect();
-        const repo = connection.getRepository(Users);
-  
-        let user = await repo.findOne({ id: id });
+        
         const { subscriptionID } = user.payment;
         const updatedSubscription = await stripe.subscriptions.update(subscriptionID,{
           cancel_at_period_end: false
@@ -293,8 +300,9 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
           await repo.save(user);
         }
         response.send({success: true,data:updatedSubscription});
-        newPaymentOperateEvent(user.email, payment_action_reactivate_canceled_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscription)
+        newPaymentOperateEvent(user.email, payment_action_reactivate_canceled_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
       } catch(err) {
+        newPaymentOperateEvent(user.email, payment_action_subscription_reactive_error, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
         response.send({success:false, message:err.raw.message})
       }
     });
@@ -316,13 +324,15 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
         );
       } catch (err) {
         response.send({ status: "error" });
+        newPaymentOperateEvent('', payment_action_webhook_construct_error);
         return;
       }
 
       const intent: any = event.data.object;
-      let subscriptionFinishDate = new Date(0);
       const connection = await connect();
       const repoUsers = connection.getRepository(Users);
+      let subscription_id = '';
+      let subscriptionFinishDate = new Date(0);
 
       switch (event.type) {
         case "payment_intent.succeeded":{
@@ -331,6 +341,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             email: intent.charges.data[0].billing_details.email,
           });
           if(!user) {
+            newPaymentOperateEvent(user.email, payment_action_intent_userDeletedOnDatabase_error)
             response.send({ status: "error", message: "Current user was deleted on database" });
             return;
           }
@@ -348,6 +359,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           subscriptionFinishDate = payment.subscription;
 
           user.payment = payment;
+          subscription_id = user.payment.subscriptionID;
 
           await repoUsers.save(user);
 
@@ -363,7 +375,13 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           let user = await repoUsers.findOne({
             email: intent.charges.data[0].billing_details.email,
           });
+          if(!user) {
+            newPaymentOperateEvent(user.email, payment_action_intent_userDeletedOnDatabase_error)
+            response.send({ status: "error", message: "Current user was deleted on database" });
+            return;
+          }
           subscriptionFinishDate = user.payment.subscription;
+          subscription_id = user.payment.subscriptionID;
           break;
         }
           
@@ -379,7 +397,10 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       const payment_id = intent.charges.data[0].payment_method;
       const customer_id = intent.charges.data[0].customer;
       const err_msg = eventType[event.type] == payment_action_intent_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
-      newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscriptionFinishDate, err_msg);
+      if(subscription_id === ''){
+        newPaymentOperateEvent(email, payment_action_intent_subscriptionDeletedOnDatabase_error);
+      }
+      else newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscription_id, subscriptionFinishDate, err_msg);
       response.send({ status: "success" });
     }, false);
   }

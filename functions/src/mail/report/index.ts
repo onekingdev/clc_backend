@@ -80,8 +80,8 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
             }
         }
         if(loginedUsers[loginedUsers.length-1].users_id == row.users_id) {
-            if(row.earnings_correct) loginedUsers[loginedUsers.length-1].users_correctQuestions += parseInt(row.correctQuestionCount);
-            else loginedUsers[loginedUsers.length-1].users_wrongQuestions += parseInt(row.wrongQuestionCount);
+            loginedUsers[loginedUsers.length-1].users_correctQuestions += parseInt(row.correctQuestionCount);
+            loginedUsers[loginedUsers.length-1].users_wrongQuestions += parseInt(row.wrongQuestionCount);
         }
     }
     /*------------------------------- group repeated users to one -E--------------------------------------------------------*/

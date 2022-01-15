@@ -30,6 +30,9 @@ export class PaymentHistory extends BaseEntity {
   customer_id: string;
 
   @Column()
+  subscription_id: string;
+
+  @Column()
   subscriptionFinishAt: Date;
 
   @Column()
