@@ -9,6 +9,7 @@ import { applyMiddleware } from "../../middleware"
 import { template } from "./template"
 import { createDailyPwd } from "../../helpers/parser"
 import { payment_action_intent_succeeded, payment_action_intent_failed } from "../../helpers/constants";
+import { ActivationCodes } from "../../entities/ActivationCodes";
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';
 
@@ -31,9 +32,11 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
             .createQueryBuilder(Users, "users")
             .addSelect("earnings.correct", "earnings_correct")
             .addSelect("earnings.createdAt", "earnings_createdAt")
+            .addSelect("activationCodes.code", "coupon_code")
             .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 1 THEN 1 ELSE 0 END )` , "correctQuestionCount")
             .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 0 THEN 1 ELSE 0 END )` , "wrongQuestionCount")
             .leftJoin(Earnings, "earnings", "users.id = earnings.userID")
+            .leftJoin(ActivationCodes, "activationCodes", "users.activationCodeID = activationCodes.id ")
             .where("users.lastLoginAt between :startDate and :endDate")
             .orWhere("earnings.createdAt between :startDate and :endDate")
             .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
@@ -42,28 +45,29 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
             .orderBy("users.id")
             .getRawMany()
                 /*--------------------------Query--------------------------
-               SELECT
-                    users.id,
-                    users.email,
-                    users.createdAt AS user_createdAt,
-                    users.lastLoginAt AS user_lastLoginAt,
-                    earnings.correct AS earnings_correct,
-                    earnings.createdAt AS earnings_createdAt,
-                    SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 1 THEN 1 ELSE 0 END ) AS correctQuestionCount,
-                    SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 0 THEN 1 ELSE 0 END ) AS wrongQuestionCount	
-                FROM
-                    users
-                    LEFT JOIN earnings ON users.id = earnings.userID 
-                WHERE
-                    ( users.lastLoginAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) 
-                    OR ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' )
+                    SELECT
+                        users.id,
+                        users.email,
+                        users.createdAt AS user_createdAt,
+                        users.lastLoginAt AS user_lastLoginAt,
+                        earnings.correct AS earnings_correct,
+                        earnings.createdAt AS earnings_createdAt,
+                        activation_codes.CODE AS coupon_code,
+                        SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 1 THEN 1 ELSE 0 END ) AS correctQuestionCount,
+                        SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 0 THEN 1 ELSE 0 END ) AS wrongQuestionCount 
+                    FROM
+                        users
+                        LEFT JOIN earnings ON users.id = earnings.userID
+                        LEFT JOIN activation_codes ON users.activationCodeID = activation_codes.id 
+                    WHERE
+                        ( users.lastLoginAt BETWEEN '2022-1-3 21:00:00' AND '2022-1-14 21:00:00' ) 
+                        OR ( earnings.createdAt BETWEEN '2022-1-3 21:00:00' AND '2022-1-14 21:00:00' ) 
                     GROUP BY
                         users.id,
                         users.createdAt,
-                        users.lastLoginAt
-                    
-                ORDER BY
-                    users.id ASC
+                        users.lastLoginAt 
+                    ORDER BY
+                        users.id ASC
                 -------------------------------------------------------------*/
     let loginedUsers = [];
     let createdUsersCount = 0;
@@ -130,9 +134,11 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             .createQueryBuilder(Users, "users")
             .addSelect("earnings.correct", "earnings_correct")
             .addSelect("earnings.createdAt", "earnings_createdAt")
+            .addSelect("activationCodes.code", "coupon_code")
             .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 1 THEN 1 ELSE 0 END )` , "correctQuestionCount")
             .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 0 THEN 1 ELSE 0 END )` , "wrongQuestionCount")
             .leftJoin(Earnings, "earnings", "users.id = earnings.userID")
+            .leftJoin(ActivationCodes, "activationCodes", "users.activationCodeID = activationCodes.id ")
             .where("users.lastLoginAt between :startDate and :endDate")
             .orWhere("earnings.createdAt between :startDate and :endDate")
             .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
@@ -141,28 +147,29 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             .orderBy("users.id")
             .getRawMany()
                     /*--------------------------Query--------------------------
-                    SELECT
-                        users.id,
-                        users.email,
-                        users.createdAt AS user_createdAt,
-                        users.lastLoginAt AS user_lastLoginAt,
-                        earnings.correct AS earnings_correct,
-                        earnings.createdAt AS earnings_createdAt,
-                        SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 1 THEN 1 ELSE 0 END ) AS correctQuestionCount,
-                        SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 0 THEN 1 ELSE 0 END ) AS wrongQuestionCount	
-                    FROM
-                        users
-                        LEFT JOIN earnings ON users.id = earnings.userID 
-                    WHERE
-                        ( users.lastLoginAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) 
-                        OR ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' )
+                         SELECT
+                            users.id,
+                            users.email,
+                            users.createdAt AS user_createdAt,
+                            users.lastLoginAt AS user_lastLoginAt,
+                            earnings.correct AS earnings_correct,
+                            earnings.createdAt AS earnings_createdAt,
+                            activation_codes.CODE AS coupon_code,
+                            SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 1 THEN 1 ELSE 0 END ) AS correctQuestionCount,
+                            SUM( CASE WHEN ( earnings.createdAt BETWEEN '2022-1-7 21:00:00' AND '2022-1-10 21:00:00' ) AND earnings.correct = 0 THEN 1 ELSE 0 END ) AS wrongQuestionCount 
+                        FROM
+                            users
+                            LEFT JOIN earnings ON users.id = earnings.userID
+                            LEFT JOIN activation_codes ON users.activationCodeID = activation_codes.id 
+                        WHERE
+                            ( users.lastLoginAt BETWEEN '2022-1-3 21:00:00' AND '2022-1-14 21:00:00' ) 
+                            OR ( earnings.createdAt BETWEEN '2022-1-3 21:00:00' AND '2022-1-14 21:00:00' ) 
                         GROUP BY
                             users.id,
                             users.createdAt,
-                            users.lastLoginAt
-                        
-                    ORDER BY
-                        users.id ASC
+                            users.lastLoginAt 
+                        ORDER BY
+                            users.id ASC
                     -------------------------------------------------------------*/
         
 
