@@ -79,32 +79,32 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             case payment_action_delete_customer :
                 row['paymentHistory_action'] = "Delete Customer"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_subscription_create_error'] = "Create Subscription Error"
+            case payment_action_subscription_create_error :
+                row['paymentHistory_action'] = "Create Subscription Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_customer_create_error'] = "Create Customer Error"
+            case payment_action_customer_create_error :
+                row['paymentHistory_action'] = "Create Customer Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_payment_attach_error'] = "Attach Payment Error"
+            case payment_action_payment_attach_error :
+                row['paymentHistory_action'] = "Attach Payment Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_customer_payUpdate_error'] = "Customer Payment Update Error"
+            case payment_action_customer_payUpdate_error :
+                row['paymentHistory_action'] = "Customer Payment Update Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_subscription_cancel_error'] = "Cancel Subscription Error"
+            case payment_action_subscription_cancel_error :
+                row['paymentHistory_action'] = "Cancel Subscription Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_subscription_reactive_error'] = "Reactivate Subscription Error"
+            case payment_action_subscription_reactive_error :
+                row['paymentHistory_action'] = "Reactivate Subscription Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_webhook_construct_error'] = "Webhook Construct Error"
+            case payment_action_webhook_construct_error :
+                row['paymentHistory_action'] = "Webhook Construct Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_intent_userDeletedOnDatabase_error'] = "User Not Exists on Database Error"
+            case payment_action_intent_userDeletedOnDatabase_error :
+                row['paymentHistory_action'] = "User Not Exists on Database Error"
                 break;
-            case payment_action_delete_customer :
-                row['payment_action_intent_subscriptionDeletedOnDatabase_error'] = "Subscription Not Exists on Database Error"
+            case payment_action_intent_subscriptionDeletedOnDatabase_error :
+                row['paymentHistory_action'] = "Subscription Not Exists on Database Error"
                 break;
             // case payment_action_other :
             //     row['paymentHistory_action'] = "Other"
