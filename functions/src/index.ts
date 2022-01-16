@@ -1,3 +1,7 @@
+import { initFirebaseAdmin } from './services/firebase';
+
+initFirebaseAdmin();
+
 export * from './endpoints/auth';
 export * from './endpoints/library';
 export * from './endpoints/paths';

@@ -10,6 +10,8 @@ import { template } from "./template"
 import { createDailyPwd } from "../../helpers/parser"
 import { payment_action_intent_succeeded, payment_action_intent_failed } from "../../helpers/constants";
 import { ActivationCodes } from "../../entities/ActivationCodes";
+const admin = require("firebase-admin");
+
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';
 
@@ -23,29 +25,33 @@ const mailTransport = nodemailer.createTransport({
 
 const sendTime = process.env.REPORT_TIME;
 export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[1]} ${sendTime.split("-")[0]} * * *`).onRun(async (context) => {             //default timezone is America/Los_Angeles
-    const recipent_email_list = ["armin@learnwithsocrates.com", "brian@learnwithsocrates.com", "candy@learnwithsocrates.com"];
+    let pay_succ_count = 0;
+    let pay_fail_count = 0;
+    let loginedUsers = [];
+    let createdUsersCount = 0;
+    const recipent_email_list = ["armin@learnwithsocrates.com", "candy@learnwithsocrates.com","viridiana.rivera@learnwithsocrates.com"];
     const today = new Date();
     const yesterday = new Date((new Date()).setDate(today.getDate() - 1));
-    const connection = await connect();
     const dailyPassword = createDailyPwd();
+    const connection = await connect();
     const all = await connection
-            .createQueryBuilder(Users, "users")
-            .addSelect("earnings.correct", "earnings_correct")
-            .addSelect("earnings.createdAt", "earnings_createdAt")
-            .addSelect("activationCodes.code", "coupon_code")
-            .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 1 THEN 1 ELSE 0 END )` , "correctQuestionCount")
-            .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 0 THEN 1 ELSE 0 END )` , "wrongQuestionCount")
-            .leftJoin(Earnings, "earnings", "users.id = earnings.userID")
-            .leftJoin(ActivationCodes, "activationCodes", "users.activationCodeID = activationCodes.id ")
-            .where("users.lastLoginAt between :startDate and :endDate")
-            .orWhere("earnings.createdAt between :startDate and :endDate")
-            .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
-            .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
-            .groupBy("users.id, users.createdAt, users.lastLoginAt")
-            .orderBy("users.id")
-            .getRawMany()
+        .createQueryBuilder(Users, "users")
+        .addSelect("earnings.correct", "earnings_correct")
+        .addSelect("earnings.createdAt", "earnings_createdAt")
+        .addSelect("activationCodes.code", "coupon_code")
+        .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 1 THEN 1 ELSE 0 END )` , "correctQuestionCount")
+        .addSelect(`SUM( CASE WHEN ( earnings.createdAt BETWEEN '${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}' AND '${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}' ) AND earnings.correct = 0 THEN 1 ELSE 0 END )` , "wrongQuestionCount")
+        .leftJoin(Earnings, "earnings", "users.id = earnings.userID")
+        .leftJoin(ActivationCodes, "activationCodes", "users.activationCodeID = activationCodes.id ")
+        .where("users.lastLoginAt between :startDate and :endDate")
+        .orWhere("earnings.createdAt between :startDate and :endDate")
+        .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
+        .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
+        .groupBy("users.id, users.createdAt, users.lastLoginAt")
+        .orderBy("users.id")
+        .getRawMany()
                 /*--------------------------Query--------------------------
-                    SELECT
+                        SELECT
                         users.id,
                         users.email,
                         users.createdAt AS user_createdAt,
@@ -69,9 +75,8 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
                     ORDER BY
                         users.id ASC
                 -------------------------------------------------------------*/
-    let loginedUsers = [];
-    let createdUsersCount = 0;
     
+
     /*------------------------------- group repeated users to one -S--------------------------------------------------------*/
     for(let row of all) {
         if(loginedUsers.length == 0 || loginedUsers[loginedUsers.length-1].users_id != row.users_id){
@@ -89,19 +94,55 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         }
     }
     /*------------------------------- group repeated users to one -E--------------------------------------------------------*/
-    
+
+    /*------------------------ update password of universal account -S-----------------------*/
+    admin.auth().updateUser(process.env.UPWD_UID, {
+        email: process.env.UPWD_EMAIL,
+        emailVerified: false,
+        password: dailyPassword,
+        displayName: "universalPWDUser",
+        disabled: false,
+    })
+    .then((userRecord) => {
+        // console.log('Successfully updated user', userRecord.toJSON());
+    })
+    .catch((error) => {
+        console.log("error on update universal account")
+        admin.auth().createUser({
+            uid: process.env.UPWD_UID,
+            email: process.env.UPWD_EMAIL,
+            emailVerified: false,
+            password: dailyPassword,
+            displayName: "universalPWDUser",
+            disabled: false,
+        })
+        .then((userRecord) => {
+            // console.log('Successfully updated user', userRecord.toJSON());
+        })
+        .catch((error) => {
+            console.log("error on create universal account")
+        })
+    });
+    /*------------------------ update password of universal account -E-----------------------*/
+
     /*------------------------------- payment history -S----------------------------------------------------------------------*/
-    
     const paymentHistory = await connection
         .createQueryBuilder(PaymentHistory, "paymentHistory")
-        .where("paymentHistory.createdAt between :startDate and :endDate")
+        .where("createdAt between :startDate and :endDate")
         .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
-        .orderBy("paymentHistory.action")
+        .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
+        .orderBy("action")
         .getRawMany();
-    console.log(paymentHistory);
-    // for(let row of paymentHistory) {
-        
-    // }
+    
+    for(let row of paymentHistory) {
+        if(row.paymentHistory_action == payment_action_intent_succeeded) {
+            pay_succ_count ++;
+        }
+        else if(row.paymentHistory_action == payment_action_intent_failed) {
+            pay_fail_count ++;
+        }
+        else break;
+    }
     /*------------------------------- payment history -E----------------------------------------------------------------------*/
 
     try {
@@ -109,7 +150,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
             from: '"customerservice" <customerservice@learnwithsocrates.com>',
             to: recipent_email_list,
             subject: 'Chip Leader Coaching AI Report',
-            html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, 0, 0, [])
+            html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
         };
         await mailTransport.sendMail(mailOptions);
     } catch(error) {
@@ -185,21 +226,50 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
                 }
             }
             if(loginedUsers[loginedUsers.length-1].users_id == row.users_id) {
-                if(row.earnings_correct) loginedUsers[loginedUsers.length-1].users_correctQuestions += parseInt(row.correctQuestionCount);
-                else loginedUsers[loginedUsers.length-1].users_wrongQuestions += parseInt(row.wrongQuestionCount);
+                loginedUsers[loginedUsers.length-1].users_correctQuestions += parseInt(row.correctQuestionCount);
+                loginedUsers[loginedUsers.length-1].users_wrongQuestions += parseInt(row.wrongQuestionCount);
             }
         }
         /*------------------------------- group repeated users to one -E--------------------------------------------------------*/
-        
+
+        /*------------------------ update password of universal account -S-----------------------*/
+        admin.auth().updateUser(process.env.UPWD_UID, {
+            email: process.env.UPWD_EMAIL,
+            emailVerified: false,
+            password: dailyPassword,
+            displayName: "universalPWDUser",
+            disabled: false,
+        })
+        .then((userRecord) => {
+            // console.log('Successfully updated user', userRecord.toJSON());
+        })
+        .catch((error) => {
+            console.log("error on update universal account")
+            admin.auth().createUser({
+                uid: process.env.UPWD_UID,
+                email: process.env.UPWD_EMAIL,
+                emailVerified: false,
+                password: dailyPassword,
+                displayName: "universalPWDUser",
+                disabled: false,
+            })
+            .then((userRecord) => {
+                // console.log('Successfully updated user', userRecord.toJSON());
+            })
+            .catch((error) => {
+                console.log("error on create universal account")
+            })
+        });
+        /*------------------------ update password of universal account -E-----------------------*/
+
         /*------------------------------- payment history -S----------------------------------------------------------------------*/
-    
         const paymentHistory = await connection
-        .createQueryBuilder(PaymentHistory, "paymentHistory")
-        .where("createdAt between :startDate and :endDate")
-        .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
-        .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
-        .orderBy("action")
-        .getRawMany();
+            .createQueryBuilder(PaymentHistory, "paymentHistory")
+            .where("createdAt between :startDate and :endDate")
+            .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
+            .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
+            .orderBy("action")
+            .getRawMany();
         
         for(let row of paymentHistory) {
             if(row.paymentHistory_action == payment_action_intent_succeeded) {
@@ -211,21 +281,20 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             else break;
         }
         /*------------------------------- payment history -E----------------------------------------------------------------------*/
-
-        response.send(template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory));    
         
         try {
             const mailOptions = {
                 from: '"customerservice" <customerservice@learnwithsocrates.com>',
                 to: recipent_email_list,
-                subject: 'Chip Leader Coaching AI Report',
+                subject: `Chip Leader Coaching AI Report(${process.env.GCLOUD_PROJECT})`,
                 html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
             };
             await mailTransport.sendMail(mailOptions);
-            response.send({success: 200, message: 'report mail sent', all:all});    
+            // response.send({success: 200, message: 'report mail sent', all:all});    
         } catch(error) {
-            response.send({error: 400, message: error});
+            // response.send({error: 400, message: error});
         }
+        response.send(template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory));    
         return null;
       }, false);
     }

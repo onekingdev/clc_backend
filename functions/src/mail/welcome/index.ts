@@ -1,9 +1,6 @@
 // @ts-ignore
 const functions = require('firebase-functions');
-const admin = require("firebase-admin");
 const nodemailer = require('nodemailer');
-
-admin.initializeApp();
 
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = 'scgzwwviuqsvcgds';

@@ -18,7 +18,7 @@ import { payment_action_intent_succeeded,
          payment_action_intent_subscriptionDeletedOnDatabase_error
         } from "../../helpers/constants";
 
-export const template = (createdUsersCount, loginedUsers, from, to, dailyPassword, paySuccCount, payFailCount, paymentHistory) => {
+export const template = (createdUsersCount, loginedUsers, from, to, dailyPassword, paySuccCount, payFailCount, paymentHistory, uniAccErrMsg = '') => {
     const today = new Date();
 
     from = moment(from).format('YYYY-MM-DD  hh:mm:ss')
@@ -30,11 +30,13 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
     const payHistoryBrief = `Today ${paySuccCount} payments were successful and ${payFailCount} payments were failed.`
     let userTableContent = '';
     for(let loginedUser of loginedUsers) {
+        if(loginedUser['coupon_code'] == 'PREMIUM2021') loginedUser['coupon_code'] = '';
         userTableContent += `
             <tr>
                 <td>${loginedUser['users_email']}</td>
                 <td>${moment(loginedUser['users_createdAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
                 <td>${moment(loginedUser['users_lastLoginAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${loginedUser['coupon_code']}</td>
                 <td>${loginedUser['users_correctQuestions']}</td>
                 <td>${loginedUser['users_wrongQuestions']}</td>
             </tr>
@@ -46,6 +48,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>User Name</th>
             <th>Create Time</th>
             <th>Login Time</th>
+            <th>Coupon Code</th>
             <th>Correct Answered Questions</th>
             <th>Wrong Answered Questions</th>
         </tr>
@@ -122,7 +125,6 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
                 <td>${row['paymentHistory_amount']}</td>
                 <td>${moment(row['paymentHistory_subscription_id']).format('YYYY-MM-DD  hh:mm:ss')}</td>
                 <td>${moment(row['paymentHistory_subscriptionFinishAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
-                <td>${row['coupon_code']}</td>
                 <td>${row['paymentHistory_error_message']}</td>
             </tr>
         `;
@@ -137,7 +139,6 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>Amount</th>
             <th>Subscription ID</th>
             <th>Subscription Finish Date</th>
-            <th>Coupon Code</th>
             <th>Error Message</th>
         </tr>
        ${payHistoryTableContent}
@@ -172,7 +173,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
         </style>
         </head>
         <body>
-        
+        ${uniAccErrMsg}
         <h2><center>${title}<center></h2>
         <p><center>${date}<center></p>
         <p><center>${brief}<center></p>
