@@ -268,7 +268,8 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             .where("createdAt between :startDate and :endDate")
             .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
             .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
-            .orderBy("action")
+            // .orderBy("action")
+            .orderBy("createdAt")
             .getRawMany();
         
         for(let row of paymentHistory) {
@@ -278,23 +279,25 @@ export const sendReportEmailRequest = functions.runWith(runtimeOpts).https.onReq
             else if(row.paymentHistory_action == payment_action_intent_failed) {
                 pay_fail_count ++;
             }
-            else break;
+            // else break;
         }
         /*------------------------------- payment history -E----------------------------------------------------------------------*/
+        
+        const mailContent = template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory);
         
         try {
             const mailOptions = {
                 from: '"customerservice" <customerservice@learnwithsocrates.com>',
                 to: recipent_email_list,
                 subject: `Chip Leader Coaching AI Report(${process.env.GCLOUD_PROJECT})`,
-                html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
+                html: mailContent
             };
             await mailTransport.sendMail(mailOptions);
             // response.send({success: 200, message: 'report mail sent', all:all});    
         } catch(error) {
             // response.send({error: 400, message: error});
         }
-        response.send(template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory));    
+        response.send(mailContent);    
         return null;
       }, false);
     }

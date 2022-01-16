@@ -121,10 +121,10 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <tr>
                 <td>${row['paymentHistory_email']}</td>
                 <td>${row['paymentHistory_action']}</td>
-                <td>${moment(row['paymentHistory_createdAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${moment(row['paymentHistory_createdAt']).format('YYYY-MM-DD hh:mm:ss')}</td>
                 <td>${row['paymentHistory_amount']}</td>
-                <td>${moment(row['paymentHistory_subscription_id']).format('YYYY-MM-DD  hh:mm:ss')}</td>
-                <td>${moment(row['paymentHistory_subscriptionFinishAt']).format('YYYY-MM-DD  hh:mm:ss')}</td>
+                <td>${row['paymentHistory_subscription_id']}</td>
+                <td>${moment(row['paymentHistory_subscriptionFinishAt']).format('YYYY-MM-DD')}</td>
                 <td>${row['paymentHistory_error_message']}</td>
             </tr>
         `;
