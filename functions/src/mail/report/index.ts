@@ -29,7 +29,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
     let pay_fail_count = 0;
     let loginedUsers = [];
     let createdUsersCount = 0;
-    const recipent_email_list = ["armin@learnwithsocrates.com", "candy@learnwithsocrates.com","viridiana.rivera@learnwithsocrates.com"];
+    const recipent_email_list = ["armin@learnwithsocrates.com", "candy@learnwithsocrates.com","brian@learnwithsocrates.com"];
     const today = new Date();
     const yesterday = new Date((new Date()).setDate(today.getDate() - 1));
     const dailyPassword = createDailyPwd();
@@ -131,7 +131,8 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         .where("createdAt between :startDate and :endDate")
         .setParameters({ startDate: `${yesterday.getFullYear()}-${yesterday.getMonth() + 1}-${yesterday.getDate()} ${yesterday.getHours()}:${yesterday.getMinutes()}:${yesterday.getSeconds()}` })
         .setParameters({ endDate: `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}` })
-        .orderBy("action")
+        // .orderBy("action")
+        .orderBy("createdAt")
         .getRawMany();
     
     for(let row of paymentHistory) {
@@ -141,10 +142,10 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         else if(row.paymentHistory_action == payment_action_intent_failed) {
             pay_fail_count ++;
         }
-        else break;
+        // else break;
     }
     /*------------------------------- payment history -E----------------------------------------------------------------------*/
-
+    
     try {
         const mailOptions = {
             from: '"customerservice" <customerservice@learnwithsocrates.com>',
