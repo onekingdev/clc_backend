@@ -144,7 +144,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
               ? new Date(moment().add(code.trailDays, "days").format("YYYY/MM/DD"))
-              : new Date(moment().add(30, "days").format("YYYY/MM/DD")),
+              : new Date(moment().add(32, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
             id: paymentMethod.id,
@@ -352,7 +352,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             created: intent.created,
             amount: intent.amount,
             subscription: new Date(
-              moment().add(30, "days").format("YYYY/MM/DD")
+              moment().add(32, "days").format("YYYY/MM/DD")
             ),
           };
 

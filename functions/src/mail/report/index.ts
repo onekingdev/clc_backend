@@ -150,7 +150,7 @@ export const sendReportEmail = functions.pubsub.schedule(`${sendTime.split("-")[
         const mailOptions = {
             from: '"customerservice" <customerservice@learnwithsocrates.com>',
             to: recipent_email_list,
-            subject: 'Chip Leader Coaching AI Report',
+            subject: `Chip Leader Coaching AI Report(${process.env.GCLOUD_PROJECT})`,
             html: template(createdUsersCount, loginedUsers, yesterday, today, dailyPassword, pay_succ_count, pay_fail_count, paymentHistory)
         };
         await mailTransport.sendMail(mailOptions);
