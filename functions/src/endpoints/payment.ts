@@ -291,6 +291,8 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
           cancel_at_period_end: false
         })
         let currentPeriodEnd = new Date(updatedSubscription.current_period_end * 1000);
+        currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 1);
+
         if(!updatedSubscription.cancel_at_period_end) {
           user.payment = {
                 ...user.payment,

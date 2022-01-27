@@ -16,3 +16,4 @@ export * from './endpoints/opened';
 export * from './mail/welcome';
 export * from './mail/payment';
 export * from './mail/report';
+export * from './endpoints/maintain';
