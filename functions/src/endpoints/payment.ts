@@ -382,8 +382,21 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             response.send({ status: "error", message: "Current user was deleted on database" });
             return;
           }
-          subscriptionFinishDate = user.payment.subscription;
+          
+          subscriptionFinishDate = new Date();
+          subscriptionFinishDate.setDate(subscriptionFinishDate.getDate() - 1)
           subscription_id = user.payment.subscriptionID;
+          const payment = {
+            ...user.payment,
+            id: intent.id,
+            created: intent.created,
+            amount: intent.amount,
+            subscription: subscriptionFinishDate
+          };
+
+          user.payment = payment;
+
+          await repoUsers.save(user);
           break;
         }
           
