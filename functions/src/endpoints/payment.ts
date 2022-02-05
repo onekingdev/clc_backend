@@ -143,7 +143,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           subscriptionID: subscription["id"],
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
-              ? new Date(moment().add(code.trailDays, "days").format("YYYY/MM/DD"))
+              ? new Date(moment().add(code.trailDays + 1, "days").format("YYYY/MM/DD"))
               : new Date(moment().add(32, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
@@ -291,7 +291,7 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
           cancel_at_period_end: false
         })
         let currentPeriodEnd = new Date(updatedSubscription.current_period_end * 1000);
-        currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 1);
+        currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 2);
 
         if(!updatedSubscription.cancel_at_period_end) {
           user.payment = {

@@ -203,7 +203,6 @@ export const parseHandHistory = (record: string) => {
         if(result.hand.trim() === "raises to") {
           amount = amount - lastAmount[player];
         }
-
         let copyAmount = amount;
         // let displayAmount = (amount == 0 ) ? 0 : (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
         let displayAmount = (result.hand.trim() == "calls" ? lastAmount.max : lastAmount[player] + amount);
