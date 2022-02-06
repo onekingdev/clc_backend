@@ -115,7 +115,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
                 ),
               },
             ],
-            trial_period_days: code.trailDays,
+            trial_period_days: code.trailDays + 2,
           })
           .catch((err) => {
             newPaymentOperateEvent(user.email, payment_action_subscription_create_error, 0, 0, paymentMethod.id, customer.id)
@@ -144,7 +144,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
               ? new Date(moment().add(code.trailDays + 2, "days").format("YYYY/MM/DD"))
-              : new Date(moment().add(32, "days").format("YYYY/MM/DD")),
+              : new Date(moment().add(31 + 2, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
             id: paymentMethod.id,
@@ -354,7 +354,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             created: intent.created,
             amount: intent.amount,
             subscription: new Date(
-              moment().add(32, "days").format("YYYY/MM/DD")
+              moment().add(31 + 2, "days").format("YYYY/MM/DD")
             ),
           };
 
