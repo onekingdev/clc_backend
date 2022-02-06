@@ -143,7 +143,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           subscriptionID: subscription["id"],
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
-              ? new Date(moment().add(code.trailDays + 1, "days").format("YYYY/MM/DD"))
+              ? new Date(moment().add(code.trailDays + 2, "days").format("YYYY/MM/DD"))
               : new Date(moment().add(32, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
           paymentMethod: {
