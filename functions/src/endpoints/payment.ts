@@ -335,6 +335,12 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
       const repoUsers = connection.getRepository(Users);
       let subscription_id = '';
       let subscriptionFinishDate = new Date(0);
+      /*-------------------- If socrates subscription, return -S----------------------------*/
+      if(intent.charges.data[0].billing_details.address.country || intent.charges.data[0].billing_details.address.line1 || intent.charges.data[0].billing_details.address.city) {
+        response.send({ status: "error", message: "Current request is for socrates" });
+        return;
+      }
+      /*-------------------- If socrates subscription, return -E----------------------------*/
 
       switch (event.type) {
         case "payment_intent.succeeded":{
@@ -343,7 +349,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             email: intent.charges.data[0].billing_details.email,
           });
           if(!user) {
-            newPaymentOperateEvent(user.email, payment_action_intent_userDeletedOnDatabase_error)
+            newPaymentOperateEvent(intent.charges.data[0].billing_details.email, payment_action_intent_userDeletedOnDatabase_error)
             response.send({ status: "error", message: "Current user was deleted on database" });
             return;
           }
@@ -378,7 +384,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             email: intent.charges.data[0].billing_details.email,
           });
           if(!user) {
-            newPaymentOperateEvent(user.email, payment_action_intent_userDeletedOnDatabase_error)
+            newPaymentOperateEvent(intent.charges.data[0].billing_details.email, payment_action_intent_userDeletedOnDatabase_error)
             response.send({ status: "error", message: "Current user was deleted on database" });
             return;
           }
