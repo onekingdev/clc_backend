@@ -93,6 +93,22 @@ export const setAssessment = functions.https.onRequest(async (request, response)
     })
 });
 
+export const fixAssessment = functions.https.onRequest(async (request, response) => {
+    applyMiddleware(request, response, async () =>{
+        const connection = await connect();
+        const repo = connection.getRepository(Users);
+        const { id } = request.body;
+
+        let user = await repo.findOne({id: id});
+
+        user.assessment = false;
+
+        await repo.save(user);
+
+        response.send(user);
+    })
+});
+
 
 export const checkUser = functions.https.onRequest(async (request, response) => {
     applyMiddleware(request, response, async () =>{
