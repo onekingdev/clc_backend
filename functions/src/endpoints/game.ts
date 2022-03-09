@@ -83,14 +83,11 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
       const connection = await connect();
-
       const { user } = request.body;
       const repo = connection.getRepository(Users);
       let thisUser = await repo.findOne({ id: user.id });
       let all;
-      // if (thisUser.path.masteredLessons.length > 0) {
-        
-        // console.log("query is ",query);
+    
       all = await connection
         .createQueryBuilder(Questions, "questions")
         .addSelect("topics.id", "topics_id")
@@ -108,8 +105,9 @@ export const getQuestionsAI = functions.runWith(runtimeOpts).https.onRequest(
         .innerJoin(Topics, "topics", "lessons.topicUID = topics.UID")
         .where("topics.UID IN (:...availableTopics)")
         .andWhere("lessons.UID NOT IN (:...masteredLessons)")
-        .setParameters({ availableTopics: thisUser.path.availableTopics.length > 0 ? thisUser.path.availableTopics : "" })
-        .setParameters({ masteredLessons: thisUser.path.masteredLessons.length > 0 ? thisUser.path.masteredLessons : "" })
+        .setParameters({ availableTopics: thisUser.path.availableTopics.length > 0 ? thisUser.path.availableTopics : [""] })
+        .setParameters({ masteredLessons: thisUser.path.masteredLessons.length > 0 ? thisUser.path.masteredLessons : [""] })
+
         .limit(1000)
         // .getSql();
         .getRawMany();

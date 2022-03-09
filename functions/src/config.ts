@@ -79,14 +79,14 @@ else {
         ],
 
         // Production Mode
-        ...(prod && {
-            database: 'clc',
-            logging: false,
-            // synchronize: false,
-            extra: {
-                socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
-            }
-        }),
+        // ...(prod && {
+        //     database: 'clc',
+        //     logging: false,
+        //     // synchronize: false,
+        //     extra: {
+        //         socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
+        //     }
+        // }),
     }
 }
 /*-------------------- Production database -E-----------------------*/
@@ -94,11 +94,11 @@ else {
 
 export const connect = async () => {
     let connection: Connection;
-
     try {
         connection = getConnection(config.name)
     } catch (e) {
         connection = await createConnection(config);
+
     }
     return connection;
 }

@@ -93,6 +93,7 @@ export const setAssessment = functions.https.onRequest(async (request, response)
     })
 });
 
+
 export const fixAssessment = functions.https.onRequest(async (request, response) => {
     applyMiddleware(request, response, async () =>{
         const connection = await connect();

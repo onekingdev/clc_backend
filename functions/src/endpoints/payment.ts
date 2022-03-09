@@ -101,7 +101,6 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
     /*--------------- delete last payment -E-------------------------------------------------*/
 
       let subscription;
-      console.log("user.payment.canceled ", user.payment.canceled )
       if (code.trailDays > 0 && user.payment.canceled == null) {
 
         subscription = await stripe.subscriptions
@@ -187,14 +186,11 @@ export const updatePaymentDetails = functions.runWith(runtimeOpts).https.onReque
       const res = await stripe.paymentMethods.attach(newPaymentMethod.id, {
         customer: customerID,
       }).catch(e => {
-        console.log("=============attach failed================");
         isAttachSuccess = false;
-        console.log(e.raw);
         newPaymentOperateEvent(user.email, payment_action_payment_attach_error, 0, 0, newPaymentMethod.id, customerID)
         response.send({success:false, message:e.raw.message})
       });
       /*--------------- add new payment method to payments method list in stripe -E----------------------*/
-      console.log("isAttach Success", isAttachSuccess);
       if(!isAttachSuccess) return;
 
       /*--------------- upgrade paymentmenthod to  new payment method for customer -S----------------------*/
