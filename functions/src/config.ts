@@ -79,14 +79,14 @@ else {
         ],
 
         // Production Mode
-        // ...(prod && {
-        //     database: 'clc',
-        //     logging: false,
-        //     // synchronize: false,
-        //     extra: {
-        //         socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
-        //     }
-        // }),
+        ...(prod && {
+            database: 'clc',
+            logging: false,
+            // synchronize: false,
+            extra: {
+                socketPath: '/cloudsql/chipleadercoaching-webapp:us-central1:clc'
+            }
+        }),
     }
 }
 /*-------------------- Production database -E-----------------------*/
