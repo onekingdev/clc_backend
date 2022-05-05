@@ -5,6 +5,11 @@ import { ActivationCodes } from "../entities/ActivationCodes";
 import { Topics } from "../entities/Topics";
 import {applyMiddleware} from "../middleware"
 import { chkDailyPwd } from "../helpers/parser"
+
+const stripe = require('stripe')(
+  process.env.NODE_ENV == "production" ? 
+  process.env.STRIPE_PRODUCTION_KEY
+  : process.env.STRIPE_DEVELOPMENT_KEY);
 const jwt = require('jsonwebtoken');
 
 
@@ -186,6 +191,16 @@ export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
 
       const all = await repo.findOne({ email: email });
       const token = all.id ? getTokenFunc(all.id, all.email): "";
+      const customerID = all.payment.customerID
+      let price = 0
+      if(customerID && !(all?.payment?.price)){
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customerID,
+        });
+        const priceObj = subscriptions?.data[0]?.items?.data[0]?.price;
+        price = priceObj?.unit_amount / 100
+        all.payment.price = price
+      } 
       all.lastLoginAt = new Date();
       response.send({...all, token: token});
       if(!!all.id) repo.save(all);

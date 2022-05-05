@@ -50,14 +50,14 @@ if(process.env.GCLOUD_PROJECT == "devenvclc") {
             ],
 
             // Dev Mode
-            ...(prod && {
-                database: 'clc',
-                logging: false,
-                // synchronize: false,
-                extra: {
-                    socketPath: '/cloudsql/devenvclc:us-central1:clc-dev'
-                }
-            }),
+            // ...(prod && {
+            //     database: 'clc',
+            //     logging: false,
+            //     // synchronize: false,
+            //     extra: {
+            //         socketPath: '/cloudsql/devenvclc:us-central1:clc-dev'
+            //     }
+            // }),
         }
 }
 /*-------------------- Dev database -E-----------------------*/
