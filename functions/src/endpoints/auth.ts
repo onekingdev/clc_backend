@@ -85,7 +85,7 @@ export const getTokenFunc = (id, email) => {
 export const createUser = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      const { activationCode, email, userName, stringID } = request.body;
+      const { activationCode, email, userName, stringID, referEmail } = request.body;
 
       try {
         const connection = await connect();
@@ -138,6 +138,7 @@ export const createUser = functions.runWith(runtimeOpts).https.onRequest(
         newUser.avatar = "S";
         newUser.userName = userName;
         newUser.email = email;
+        newUser.referEmail = referEmail
         newUser.type = type();
         newUser.masteredLevel = 1;
         newUser.createdAt = new Date();

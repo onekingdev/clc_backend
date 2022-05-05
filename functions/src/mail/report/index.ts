@@ -13,7 +13,7 @@ import { ActivationCodes } from "../../entities/ActivationCodes";
 const admin = require("firebase-admin");
 
 const gmailEmail = 'customerservice@learnwithsocrates.com';
-const gmailPassword = '#[,.m/;<V?';
+const gmailPassword = 'scgzwwviuqsvcgds';
 
 const mailTransport = nodemailer.createTransport({
     service: 'gmail',

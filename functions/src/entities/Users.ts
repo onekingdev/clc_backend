@@ -22,6 +22,9 @@ export class Users extends BaseEntity {
 
     @Column()
     email: string;
+    
+    @Column()
+    referEmail: string;
 
     @Column()
     type: string; // admin, free, premium
