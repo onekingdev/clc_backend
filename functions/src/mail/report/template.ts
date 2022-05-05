@@ -39,6 +39,8 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
                 <td>${loginedUser['coupon_code']}</td>
                 <td>${loginedUser['users_correctQuestions']}</td>
                 <td>${loginedUser['users_wrongQuestions']}</td>
+                <td>${loginedUser['users_referEmail']}</td>
+
             </tr>
         `;
     }
@@ -51,6 +53,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>Coupon Code</th>
             <th>Correct Answered Questions</th>
             <th>Wrong Answered Questions</th>
+            <th>Refer Email</th>
         </tr>
        ${userTableContent}
     </table>`;
