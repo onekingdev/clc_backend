@@ -53,7 +53,7 @@ export const template = (createdUsersCount, loginedUsers, from, to, dailyPasswor
             <th>Coupon Code</th>
             <th>Correct Answered Questions</th>
             <th>Wrong Answered Questions</th>
-            <th>Refer Email</th>
+            <th>Referral email</th>
         </tr>
        ${userTableContent}
     </table>`;
