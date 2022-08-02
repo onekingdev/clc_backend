@@ -342,7 +342,6 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
 
       switch (event.type) {
         case "payment_intent.succeeded":{
-          console.log(intent);
           let user = await repoUsers.findOne({
             email: intent.charges.data[0].billing_details.email,
           });
