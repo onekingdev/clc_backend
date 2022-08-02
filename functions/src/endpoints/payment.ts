@@ -53,7 +53,7 @@ export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
 export const paymentSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
     applyMiddleware(request, response, async () =>{
-      const { email, paymentMethod, subscriptionType, reactivate } = request.body;
+      const { email, paymentMethod, subscriptionType, subscriptionInterval, reactivate } = request.body;
       if(reactivate) 
         paymentMethod.card={
           brand: paymentMethod.brand,
@@ -110,7 +110,8 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
               {
                 price: getStripeKey.subscription_price(
                   stripe_env,
-                  subscriptionType
+                  subscriptionType,
+                  subscriptionInterval,
                 ),
               },
             ],
@@ -129,7 +130,8 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
             {
               price: getStripeKey.subscription_price(
                 stripe_env,
-                subscriptionType
+                subscriptionType,
+                subscriptionInterval
               ),
             },
           ],
@@ -143,8 +145,9 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
               ? new Date(moment().add(code.trailDays + 2, "days").format("YYYY/MM/DD"))
-              : new Date(moment().add(31 + 2, "days").format("YYYY/MM/DD")),
+              : new Date(moment().add(subscriptionInterval === 'year' ? 365 : 31 + 2, "days").format("YYYY/MM/DD")),
           subscriptionType: subscriptionType,
+          subscriptionInterval: subscriptionInterval,
           paymentMethod: {
             id: paymentMethod.id,
             brand: paymentMethod.card.brand,
@@ -325,22 +328,21 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
         newPaymentOperateEvent('', payment_action_webhook_construct_error);
         return;
       }
-
       const intent: any = event.data.object;
       const connection = await connect();
       const repoUsers = connection.getRepository(Users);
       let subscription_id = '';
       let subscriptionFinishDate = new Date(0);
       /*-------------------- If socrates subscription, return -S----------------------------*/
-      if(intent.charges.data[0].billing_details.address.country || intent.charges.data[0].billing_details.address.line1 || intent.charges.data[0].billing_details.address.city) {
-        response.send({ status: "error", message: "Current request is for socrates" });
-        return;
-      }
+      // if(intent.charges.data[0].billing_details.address.country || intent.charges.data[0].billing_details.address.line1 || intent.charges.data[0].billing_details.address.city) {
+      //   response.send({ status: "error", message: "Current request is for socrates" });
+      //   return;
+      // }
       /*-------------------- If socrates subscription, return -E----------------------------*/
 
       switch (event.type) {
         case "payment_intent.succeeded":{
-
+          console.log(intent);
           let user = await repoUsers.findOne({
             email: intent.charges.data[0].billing_details.email,
           });
@@ -401,23 +403,24 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
           await repoUsers.save(user);
           break;
         }
-          
       }
-      const eventType = {
-        "payment_intent.succeeded" : payment_action_intent_succeeded,
-        "payment_intent.payment_failed" : payment_action_intent_failed
+      if (["payment_intent.succeeded", "payment_intent.payment_failed"].indexOf(event.type) >= 0) {
+        const eventType = {
+          "payment_intent.succeeded" : payment_action_intent_succeeded,
+          "payment_intent.payment_failed" : payment_action_intent_failed
+        }
+        const email = intent.charges.data[0].billing_details.email;
+        const type = eventType[event.type] !== undefined ? eventType[event.type] : payment_action_other;
+        const amount = intent.amount;
+        const amount_captured = intent.amount_captured;
+        const payment_id = intent.charges.data[0].payment_method;
+        const customer_id = intent.charges.data[0].customer;
+        const err_msg = eventType[event.type] == payment_action_intent_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
+        if(subscription_id === ''){
+          newPaymentOperateEvent(email, payment_action_intent_subscriptionDeletedOnDatabase_error);
+        }
+        else newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscription_id, subscriptionFinishDate, err_msg);
       }
-      const email = intent.charges.data[0].billing_details.email;
-      const type = eventType[event.type] !== undefined ? eventType[event.type] : payment_action_other;
-      const amount = intent.amount;
-      const amount_captured = intent.amount_captured;
-      const payment_id = intent.charges.data[0].payment_method;
-      const customer_id = intent.charges.data[0].customer;
-      const err_msg = eventType[event.type] == payment_action_intent_failed && intent.last_payment_error && intent.last_payment_error.message ? intent.last_payment_error.message : '';
-      if(subscription_id === ''){
-        newPaymentOperateEvent(email, payment_action_intent_subscriptionDeletedOnDatabase_error);
-      }
-      else newPaymentOperateEvent(email, type, amount, amount_captured, payment_id, customer_id, subscription_id, subscriptionFinishDate, err_msg);
       response.send({ status: "success" });
     }, false);
   }
