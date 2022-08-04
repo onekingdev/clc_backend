@@ -6,10 +6,10 @@ name: Deploy Development of CLC
   #triggers the workflow whenever a push is made to the main branch
   push:
     branches:
-      - dev
+      - development
   pull_request:
     branches:
-      - dev
+      - development
 
 jobs:
   #this workfloe has only one job
