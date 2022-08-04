@@ -1,5 +1,5 @@
 
-name: Deploy DevCLC
+name: Deploy Production of CLC
 
 # Controls when the workflow will run
 'on':
