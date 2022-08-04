@@ -357,7 +357,7 @@ export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
             created: intent.created,
             amount: intent.amount,
             subscription: new Date(
-              moment().add(31 + 2, "days").format("YYYY/MM/DD")
+              moment().add(user.payment.subscriptionInterval === 'year' ? 365 : 31 + 2, "days").format("YYYY/MM/DD")
             ),
           };
 
