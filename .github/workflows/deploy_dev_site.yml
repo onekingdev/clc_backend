@@ -46,7 +46,6 @@ jobs:
         # navigates to your functions folder and install the dependencies
         run: |
           cd functions
-          sudo rm .env
           sudo mv .env.dev .env
           yarn install
         # If your firebase cloud functions project uses firebase-admin 
