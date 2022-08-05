@@ -24,6 +24,7 @@ const mailTransport = nodemailer.createTransport({
 });
 
 const sendTime = process.env.REPORT_TIME;
+console.log(sendTime);
 export const sendReportEmail = functions.runWith(runtimeOpts).pubsub.schedule(`${sendTime.split("-")[1]} ${sendTime.split("-")[0]} * * *`).onRun(async (context) => {             //default timezone is America/Los_Angeles
     let pay_succ_count = 0;
     let pay_fail_count = 0;
