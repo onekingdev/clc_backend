@@ -23,22 +23,15 @@ jobs:
       # this install the dependencies specified in your package.json file into the current workflow
       - name: Install dependencies
         # navigates to your functions folder and install the dependencies
-        run: cd functions && yarn install
+        run: |
+          cd functions
+          yarn install
         # If your firebase cloud functions project uses firebase-admin 
         # you need to create a config file used to initialize your project
         # the below task creates a config.json file in your functions directory
-      # - name: Create config json
-      #   uses: jsdaniell/create-json@1.1.2
-      #   id: create-config-json
-      #   with:
-      #     name: 'config.json'
-      #     json: '{"type": "${{ secrets.TYPE }}","auth_uri": "${{ secrets.AUTH_URI }}","auth_provider_x509_cert_url": "${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}","private_key_id": "${{ secrets.PRIVATE_KEY_ID }}","project_id": "${{ secrets.PROJECT_ID }}","private_key": "${{ secrets.PRIVATE_KEY }}","token_uri": "${{ secrets.TOKEN_URI }}", "client_email": "${{ secrets.CLIENT_EMAIL }}","client_x509_cert_url": "${{ secrets.CLIENT_X509_CERT_URL }}","client_id": "${{ secrets.CLIENT_ID }}"}'
-      #     dir: 'functions/'
-        # The below task uses the w9jds/firebase-action@master action with the appropriate argument 
-        # to deploy your firebase cloud functions.
       - name: Deploy to dev site
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_TOKEN: 1//0cl4PB84ArIB7CgYIARAAGAwSNwF-L9Irtq5CTk_m4VcGqk2T4ILl78mrS3BH80i9QUC-XOXzh_Ecf_X0wzZVDvqjxNfr3gx3cbg
