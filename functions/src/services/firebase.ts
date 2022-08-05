@@ -2,7 +2,7 @@ import * as firebase from 'firebase';
 import 'firebase/auth';
 
 const admin = require("firebase-admin");
-require("dotenv").config();
+// require("dotenv").config();
 
 let app;
 /*------------------ developement -S------------------*/

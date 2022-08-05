@@ -1,5 +1,5 @@
 import axios from "axios";
-require("dotenv").config();
+// require("dotenv").config();
 var crypto = require('crypto');
 let URL = require("url").URL;
 
