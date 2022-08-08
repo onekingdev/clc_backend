@@ -1,4 +1,4 @@
-// require("dotenv").config();
+require("dotenv").config();
 import { PaymentHistory } from "../entities/PaymentHistory";
 import { Users } from "../entities/Users";
 import { connect } from "../config";

@@ -22,6 +22,8 @@ export const getQuestions = functions.https.onRequest(
       for (let i = 0; i < all.length; i++) {
         data.push({
           ...parseHandHistory(all[i].handHistory),
+          imgUrl: all[i].imgUrl || '',
+          textContent: all[i].textContent || '',
           question: {
             questionID: all[i].id,
             reward: all[i].reward,

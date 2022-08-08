@@ -14,8 +14,14 @@ export class Questions extends BaseEntity {
   @Column()
   questionText: string;
 
-  @Column("longtext")
+  @Column("longtext", { nullable: true })
   handHistory: string;
+
+  @Column("longtext", { nullable: true })
+  textContent: string;
+
+  @Column({ nullable: true })
+  imgUrl: string;
 
   @Column("simple-json")
   answers: {

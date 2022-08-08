@@ -1,4 +1,4 @@
-// require("dotenv").config();
+require("dotenv").config();
 
 export const getStripeKey = {
   stripe_secret: (env: string) => {
