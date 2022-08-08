@@ -1,9 +1,7 @@
 
 name: Deploy Production of CLC
 
-# Controls when the workflow will run
 'on':
-  #triggers the workflow whenever a push is made to the main branch
   push:
     branches:
       - main
@@ -12,7 +10,6 @@ name: Deploy Production of CLC
       - main
 
 jobs:
-  #this workfloe has only one job
   deploy_to_prod_site:
     runs-on: ubuntu-latest
     steps:
@@ -20,22 +17,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 14.18.0
-      # this install the dependencies specified in your package.json file into the current workflow
+      - name: create .env
+        run: |
+          cd functions
+          mv .env.dev .env
       - name: Install dependencies
-        # navigates to your functions folder and install the dependencies
         run: cd functions && yarn install
-        # If your firebase cloud functions project uses firebase-admin 
-        # you need to create a config file used to initialize your project
-        # the below task creates a config.json file in your functions directory
-      # - name: Create config json
-      #   uses: jsdaniell/create-json@1.1.2
-      #   id: create-config-json
-      #   with:
-      #     name: 'config.json'
-      #     json: '{"type": "${{ secrets.TYPE }}","auth_uri": "${{ secrets.AUTH_URI }}","auth_provider_x509_cert_url": "${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}","private_key_id": "${{ secrets.PRIVATE_KEY_ID }}","project_id": "${{ secrets.PROJECT_ID }}","private_key": "${{ secrets.PRIVATE_KEY }}","token_uri": "${{ secrets.TOKEN_URI }}", "client_email": "${{ secrets.CLIENT_EMAIL }}","client_x509_cert_url": "${{ secrets.CLIENT_X509_CERT_URL }}","client_id": "${{ secrets.CLIENT_ID }}"}'
-      #     dir: 'functions/'
-        # The below task uses the w9jds/firebase-action@master action with the appropriate argument 
-        # to deploy your firebase cloud functions.
       - name: Deploy to dev site
         uses: w9jds/firebase-action@master
         with:
