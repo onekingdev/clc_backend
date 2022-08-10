@@ -16,10 +16,3 @@ export const payment_action_webhook_construct_error = 14;
 export const payment_action_intent_userDeletedOnDatabase_error = 15;
 export const payment_action_intent_subscriptionDeletedOnDatabase_error = 16;
 export const payment_action_other = 17;
-
-
-
-
-
-
-

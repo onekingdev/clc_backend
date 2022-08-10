@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = '#[,.m/;<V?';
 
-const mailTransport = nodemailer.createTransport({
+const mailTransport = process.env.NODE_ENV !== 'local' && nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: gmailEmail,

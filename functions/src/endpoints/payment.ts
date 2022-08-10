@@ -29,7 +29,8 @@ import  { payment_action_intent_succeeded,
           payment_action_webhook_construct_error,
           payment_action_intent_userDeletedOnDatabase_error,
           payment_action_intent_subscriptionDeletedOnDatabase_error,
-          payment_action_other } from "../helpers/constants"
+          payment_action_other, 
+        } from "../helpers/constants"
 // @ts-ignore
 const stripe = new Stripe(
   process.env.NODE_ENV == "production" ? 
@@ -52,7 +53,7 @@ export const paymentIntent = functions.runWith(runtimeOpts).https.onRequest(
 
 export const paymentSubscription = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    applyMiddleware(request, response, async () =>{
+    applyMiddleware(request, response, async () => {
       const { email, paymentMethod, subscriptionType, subscriptionInterval, reactivate } = request.body;
       if(reactivate) 
         paymentMethod.card={
@@ -70,7 +71,42 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
       let user = await repo.findOne({ email: email });
       let code = await codes.findOne({ id: user.activationCodeID });
       let customer;
-      try{
+      // if user is upgrade the plan, will remove the old subscription
+      /********************* Remove subscription Start ********************** */
+      const downgrading =
+        (user.payment.subscriptionType === 'CL AI' && user.payment.subscriptionInterval === 'year' && subscriptionType === 'CL AI' && subscriptionInterval === 'month') || // 5 in google
+        (user.payment.subscriptionType === 'CL AI' && user.payment.subscriptionInterval === 'year' && subscriptionType === 'CL AI+' && subscriptionInterval === 'month') || // 6 in google
+        (user.payment.subscriptionType === 'CL AI+' && user.payment.subscriptionInterval === 'month' && subscriptionType === 'CL AI' && subscriptionInterval === 'month') || // 8 in google
+        (user.payment.subscriptionType === 'CL AI+' && user.payment.subscriptionInterval === 'month' && subscriptionType === 'CL AI' && subscriptionInterval === 'year') || // 9 in google
+        (user.payment.subscriptionType === 'CL AI+' && user.payment.subscriptionInterval === 'year' && subscriptionType === 'CL AI+' && subscriptionInterval === 'month') || // 10 in google
+        (user.payment.subscriptionType === 'CL AI+' && user.payment.subscriptionInterval === 'year' && subscriptionType === 'CL AI' && subscriptionInterval === 'month') || // 11 in google
+        (user.payment.subscriptionType === 'CL AI+' && user.payment.subscriptionInterval === 'year' && subscriptionType === 'CL AI' && subscriptionInterval === 'year') // 12 in google=
+        // Cancel old subscription on end of period
+      console.log('----------- 1', downgrading);
+      if (user?.payment?.subscriptionID) { // if it is not first payment
+        try {
+          await stripe.subscriptions.update(user.payment.subscriptionID, {
+            cancel_at_period_end: downgrading
+          });
+          // let currentPeriodEnd = new Date(canceled.current_period_end * 1000);
+          
+          // if (canceled.cancel_at_period_end) {
+          //   user.payment = {
+          //         ...user.payment,
+          //         subscription: currentPeriodEnd,
+          //       };
+          //   await repo.save(user);
+          // }
+        } catch (err) {
+          newPaymentOperateEvent(user.email, payment_action_subscription_cancel_error, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription);
+          // console.log("Canceled ? ", canceled.current_period_end);
+          // response.send({ success: false, message: err.raw.message });
+          // return;
+        }
+      }
+      console.log('----------- 2', user?.payment?.subscriptionID);
+      /********************* Remove subscription End ********************** */
+      try {
         customer = await stripe.customers.create({
           payment_method: paymentMethod.id,
           email: email,
@@ -79,28 +115,34 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           },
         });
       } catch (err) {
+        console.log(err.message);
         if(reactivate) customer = {id:user.payment.customerID};
         else {
-          response.send({ client_secret: null, status: "invalid_creditcard" });
           newPaymentOperateEvent(user.email, payment_action_customer_create_error);
-          return;
+          // response.send({ client_secret: null, status: "invalid_creditcard" });
+          // return;
         }
-      } 
-      await stripe.paymentMethods.attach(paymentMethod.id, {
-        customer: customer.id,
-      }).catch((err) => {
+      }
+      console.log('----------- 3', customer.id);
+      try {
+        await stripe.paymentMethods.attach(paymentMethod.id, {
+          customer: customer.id,
+        });
+      } catch (err) {
+        console.log(err.message);
         newPaymentOperateEvent(user.email, payment_action_payment_attach_error, 0, 0, paymentMethod.id, customer.id);
-        
-      });
-    /*--------------- delete last payment -S-------------------------------------------------*/
+      };
+      console.log('----------- 4', customer.id);
+      /*--------------- delete last payment -S-------------------------------------------------*/
       if(user.payment.customerID && user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
         newPaymentOperateEvent(user.email, payment_action_delete_customer, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
       }
-      
-    /*--------------- delete last payment -E-------------------------------------------------*/
-
+      /*--------------- delete last payment -E-------------------------------------------------*/
+      console.log('----------- 5', user.payment.customerID);
       let subscription;
+      let scheduledSubscription;
+      let scheduled = false;
       if (code.trailDays > 0 && user.payment.canceled == null) {
 
         subscription = await stripe.subscriptions
@@ -121,31 +163,65 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
             newPaymentOperateEvent(user.email, payment_action_subscription_create_error, 0, 0, paymentMethod.id, customer.id)
             return response.send(err)
           });
-          
+          console.log('----------- 6', subscription.id);
       } else {
-
-        subscription = await stripe.subscriptions.create({
-          customer: customer.id,
-          items: [
-            {
-              price: getStripeKey.subscription_price(
-                stripe_env,
-                subscriptionType,
-                subscriptionInterval
-              ),
-            },
-          ],
-        });
-
+        if (downgrading) {
+          // have to schedule the subscription
+          scheduledSubscription = await stripe.subscriptionSchedules.create({
+            customer: customer.id,
+            start_date: Math.floor(new Date(user.payment.subscription).getTime() / 1000),
+            end_behavior: 'release',
+            phases: [{
+              items: [
+                {
+                  price: getStripeKey.subscription_price(
+                    stripe_env,
+                    subscriptionType,
+                    subscriptionInterval
+                  ),
+                }
+              ]
+            }]
+          })
+          .catch((err) => {
+            newPaymentOperateEvent(user.email, payment_action_subscription_create_error, 0, 0, paymentMethod.id, customer.id)
+            return response.send(err)
+          });
+          scheduled = true;
+          console.log('----------- 7', scheduledSubscription.id);
+        } else {
+          subscription = await stripe.subscriptions.create({
+            customer: customer.id,
+            items: [
+              {
+                price: getStripeKey.subscription_price(
+                  stripe_env,
+                  subscriptionType,
+                  subscriptionInterval
+                ),
+              },
+            ],
+          })
+          .catch((err) => {
+            newPaymentOperateEvent(user.email, payment_action_subscription_create_error, 0, 0, paymentMethod.id, customer.id)
+            return response.send(err)
+          });
+          console.log('----------- 8', subscription.id);
+        }
       }
-      if (customer.id && subscription.id && paymentMethod.id) {
+      if (customer.id && (subscription?.id || scheduledSubscription?.id) && paymentMethod.id) {
         user.payment = {
           customerID: customer.id,
-          subscriptionID: subscription["id"],
+          subscriptionID: scheduled ? scheduledSubscription["id"] : subscription["id"],
+          scheduled: scheduled,
           subscription:
             code.trailDays > 0 && user.payment.canceled == null
               ? new Date(moment().add(code.trailDays + 2, "days").format("YYYY/MM/DD"))
-              : new Date(moment().add(subscriptionInterval === 'year' ? 365 : 31 + 2, "days").format("YYYY/MM/DD")),
+              : (
+                downgrading ?
+                  user.payment.subscription :
+                  new Date(moment().add(subscriptionInterval === 'year' ? 365 : 31 + 2, "days").format("YYYY/MM/DD"))
+              ),
           subscriptionType: subscriptionType,
           subscriptionInterval: subscriptionInterval,
           paymentMethod: {
@@ -157,13 +233,14 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           },
           canceled: false
         };
+        console.log('----------- 9', user.payment)
       } else {
         response.send({ client_secret: null, status: "error" });
       }
       await repo.save(user);
 
-      const status = subscription["status"];
-      const client_secret = subscription["client_secret"];
+      const status = scheduled ? scheduledSubscription["status"] : subscription["status"];
+      const client_secret = scheduled ? scheduledSubscription["client_secret"] : subscription["client_secret"];
       
       newPaymentOperateEvent(user.email, reactivate ? payment_action_new_subscription_reactivate : payment_action_new_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
 
@@ -250,23 +327,44 @@ export const cancelSubscription = functions.runWith(runtimeOpts).https.onRequest
 
       let user = await repo.findOne({ id: id });
       try{
-        const { subscriptionID } = user.payment;
-        const canceled = await stripe.subscriptions.update(subscriptionID,{
-          cancel_at_period_end: true
-        })
-
-        let currentPeriodEnd = new Date(canceled.current_period_end * 1000);
-        
-        if(canceled.cancel_at_period_end) {
+        const { subscriptionID, scheduled } = user.payment;
+        if (scheduled) {
+          const canceled = await stripe.subscriptionSchedules.cancel(subscriptionID);
           user.payment = {
-                ...user.payment,
-                canceled: true,
-                subscription: currentPeriodEnd,
-              };
+            ...user.payment,
+            canceled: true,
+          }
           await repo.save(user);
+          newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
+          response.send({
+            success: true, data: {
+              ...canceled,
+              scheduled: true
+            }
+          });
+        } else {
+          const canceled = await stripe.subscriptions.update(subscriptionID,{
+            cancel_at_period_end: true
+          })
+
+          let currentPeriodEnd = new Date(canceled.current_period_end * 1000);
+          
+          if(canceled.cancel_at_period_end) {
+            user.payment = {
+                  ...user.payment,
+                  canceled: true,
+                  subscription: currentPeriodEnd,
+                };
+            await repo.save(user);
+          }
+          newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
+          response.send({
+            success: true, data: {
+              ...canceled,
+              scheduled: false
+            },
+          });
         }
-        newPaymentOperateEvent(user.email, payment_action_cancel_subscription, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
-        response.send({success: true,data:canceled});
       } catch(err) {
         newPaymentOperateEvent(user.email, payment_action_subscription_cancel_error, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
         response.send({success:false, message:err.raw.message})
@@ -312,7 +410,8 @@ export const reActiveSubscription = functions.runWith(runtimeOpts).https.onReque
 
 export const stripeHook = functions.runWith(runtimeOpts).https.onRequest(
   async (request, response) => {
-    applyMiddleware(request, response, async () =>{
+    applyMiddleware(request, response, async () => {
+      console.log('Stripe Hook');
       const sig = request.headers["stripe-signature"];
       const endpointSecret = getStripeKey.hook_secret(stripe_env);
       let event;

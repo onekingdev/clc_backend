@@ -53,6 +53,7 @@ export class Users extends BaseEntity {
         customerID?: string,
         created?: number,
         amount?: number,
+        scheduled?: boolean,
         subscription?: Date,
         subscriptionType?: string,
         subscriptionInterval?: string,

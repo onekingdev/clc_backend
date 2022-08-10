@@ -200,7 +200,7 @@ export const getUserByEmail = functions.runWith(runtimeOpts).https.onRequest(
         const priceObj = subscriptions?.data[0]?.items?.data[0]?.price;
         price = priceObj?.unit_amount / 100
         all.payment.price = price
-      } 
+      }
       all.lastLoginAt = new Date();
       response.send({...all, token: token});
       if(!!all.id) repo.save(all);

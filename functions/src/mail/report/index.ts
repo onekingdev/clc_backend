@@ -15,15 +15,13 @@ const admin = require("firebase-admin");
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = '#[,.m/;<V?';
 
-const mailTransport = nodemailer.createTransport({
+const mailTransport = process.env.NODE_ENV !== 'local' && nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: gmailEmail,
         pass: gmailPassword,
     },
 });
-
-console.log(process.env.NODE_ENV)
 
 const sendTime = process.env.REPORT_TIME;
 export const sendReportEmail = functions.runWith(runtimeOpts).pubsub.schedule(`${sendTime.split("-")[1]} ${sendTime.split("-")[0]} * * *`).onRun(async (context) => {             //default timezone is America/Los_Angeles

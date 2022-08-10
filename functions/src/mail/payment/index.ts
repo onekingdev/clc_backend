@@ -1,3 +1,4 @@
+require("dotenv").config();
 // @ts-ignore
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
@@ -5,7 +6,7 @@ const nodemailer = require('nodemailer');
 const gmailEmail = 'customerservice@learnwithsocrates.com';
 const gmailPassword = '#[,.m/;<V?';
 
-const mailTransport = nodemailer.createTransport({
+const mailTransport = process.env.NODE_ENV !== 'local' && nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: gmailEmail,
