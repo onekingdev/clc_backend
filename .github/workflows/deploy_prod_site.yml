@@ -20,7 +20,7 @@ jobs:
       - name: create .env
         run: |
           cd functions
-          mv .env.dev .env
+          mv .env.prod .env
       - name: Install dependencies
         run: cd functions && yarn install
       - name: Deploy to dev site
