@@ -233,7 +233,7 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
           },
           canceled: false
         };
-        console.log('----------- 9', user.payment)
+        console.log('----------- 9')
       } else {
         response.send({ client_secret: null, status: "error" });
       }
