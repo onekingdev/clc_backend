@@ -100,8 +100,8 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
         } catch (err) {
           newPaymentOperateEvent(user.email, payment_action_subscription_cancel_error, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription);
           // console.log("Canceled ? ", canceled.current_period_end);
-          // response.send({ success: false, message: err.raw.message });
-          // return;
+          response.send({ success: false, message: err.raw.message });
+          return;
         }
       }
       console.log('----------- 2', user?.payment?.subscriptionID);
@@ -119,11 +119,11 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
         if(reactivate) customer = {id:user.payment.customerID};
         else {
           newPaymentOperateEvent(user.email, payment_action_customer_create_error);
-          // response.send({ client_secret: null, status: "invalid_creditcard" });
-          // return;
+          response.send({ client_secret: null, status: "invalid_creditcard" });
+          return;
         }
       }
-      console.log('----------- 3', customer.id);
+      console.log('----------- 3', customer?.id);
       try {
         await stripe.paymentMethods.attach(paymentMethod.id, {
           customer: customer.id,
@@ -132,14 +132,14 @@ export const paymentSubscription = functions.runWith(runtimeOpts).https.onReques
         console.log(err.message);
         newPaymentOperateEvent(user.email, payment_action_payment_attach_error, 0, 0, paymentMethod.id, customer.id);
       };
-      console.log('----------- 4', customer.id);
+      console.log('----------- 4', customer?.id);
       /*--------------- delete last payment -S-------------------------------------------------*/
       if(user.payment.customerID && user.payment.canceled !== true) {
         stripe.customers.del(user.payment.customerID)
         newPaymentOperateEvent(user.email, payment_action_delete_customer, 0, 0, user.payment.paymentMethod.id, user.payment.customerID, user.payment.subscriptionID, user.payment.subscription)
       }
       /*--------------- delete last payment -E-------------------------------------------------*/
-      console.log('----------- 5', user.payment.customerID);
+      console.log('----------- 5', user.payment?.customerID);
       let subscription;
       let scheduledSubscription;
       let scheduled = false;
