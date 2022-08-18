@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import {connect, runtimeOpts} from '../config';
 import { Library } from '../entities/Library';
+import { LibraryWatchingStatus } from '../entities/LibraryWatchingStatus';
+import { Users } from '../entities/Users';
 import {vimeoDataExtractor} from "../helpers/parser";
 import {applyMiddleware} from "../middleware"
 
@@ -12,18 +14,25 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
         const connection = await connect();
 
         const repoLibrary = connection.getRepository(Library);
-        const all = await repoLibrary.find();
+        try {
+            const all = await repoLibrary.find({
+                relations: ["libraryWatchingStatus", "libraryWatchingStatus.user"]
+            });
 
-        let library = {}
-        all.forEach(item => {
-            if (item.type in library) {
-                library[item.type].push(item);
-            } else {
-                library[item.type] = [item];
-            }
-        })
+            let library = {}
+            all.forEach(item => {
+                if (item.type in library) {
+                    library[item.type].push(item);
+                } else {
+                    library[item.type] = [item];
+                }
+            })
 
-        response.send(library);
+            response.send(library);
+        } catch (err) {
+            console.log(err.message)
+            response.send({});
+        }
     });
 });
 
@@ -69,3 +78,60 @@ export const uploadLibrary = functions.https.onRequest(async (request, response)
         response.send({success: 200})
     });
 });
+
+export const watchVideoLibrary = functions.runWith(runtimeOpts).https.onRequest(async (request, response) => {
+    applyMiddleware(request, response, async () => {
+        const libraryId: number = request.body.id;
+        const userId: number = request.body.userId;
+        console.log(libraryId, userId)
+        const connection = await connect();
+
+        const repoLibrary = connection.getRepository(Library);
+        const repoUsers = connection.getRepository(Users);
+        const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
+        
+        try {
+            const existing = await repoLibraryWatchingStatus.findOne({ user: { id: userId }, library: { id: libraryId } });
+            if (existing) {
+                response.status(409).send("Already existing");
+                return;
+            }
+        } catch (err) {
+            response.status(500).send(err.message);
+            return;
+        }
+        let watchingVideo;
+        try {
+            watchingVideo = await repoLibrary.findOne({ id: libraryId });
+        } catch (err) {
+            response.status(404).send(err.message);
+            return;
+        }
+        let watchingUser;
+        try {
+            watchingUser = await repoUsers.findOne({ id: userId });
+        } catch (err) {
+            response.status(404).send(err.message);
+            return;
+        }
+
+        const newLibraryWathcingStatus = new LibraryWatchingStatus();
+        newLibraryWathcingStatus.library = watchingVideo;
+        newLibraryWathcingStatus.user = watchingUser;
+        try {
+            await repoLibraryWatchingStatus.save(newLibraryWathcingStatus)
+        } catch (err) {
+            response.status(500).send(err.message);
+            return;
+        }
+        // all.forEach(item => {
+        //     if (item.type in library) {
+        //         library[item.type].push(item);
+        //     } else {
+        //         library[item.type] = [item];
+        //     }
+        // })
+
+        response.status(201);
+    });
+})
