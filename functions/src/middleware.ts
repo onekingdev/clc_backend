@@ -21,7 +21,7 @@ export const applyMiddleware = (req, res, handler, checkToken = true) => {
           status = SERVER_ERROR;
         }
         if(status != SUCCESS) {
-          res.status(status).json({ msg: "Server Not Found!"});
+          return res.status(status).json({ msg: "Server Not Found!"});
         }  
       /*------------------------------ Verify token -E-------------------------------*/
         return handler(req, res)

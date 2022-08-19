@@ -1,4 +1,11 @@
-import {Entity, PrimaryGeneratedColumn, Column, BaseEntity} from 'typeorm';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    BaseEntity,
+    // OneToMany
+} from 'typeorm';
+// import { LibraryWatchingStatus } from './LibraryWatchingStatus';
 
 @Entity()
 export class Users extends BaseEntity {
@@ -67,4 +74,7 @@ export class Users extends BaseEntity {
             last4: string
         }
     };
+
+    // @OneToMany(() => LibraryWatchingStatus, (libraryWatchingStatus: LibraryWatchingStatus) => libraryWatchingStatus.user, { cascade: true })
+    // libraryWatchingStatus: LibraryWatchingStatus[];
 }
