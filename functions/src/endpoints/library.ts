@@ -12,27 +12,33 @@ let URL = require('url').URL;
 export const getLibrary = functions.https.onRequest(async (request, response) => {
     applyMiddleware(request, response, async () =>{
         const connection = await connect();
-
+        const userId = 158;
         const repoLibrary = connection.getRepository(Library);
+        const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
         try {
-            const all = await repoLibrary.find({
-                relations: ["libraryWatchingStatus"]
-            });
-            // const all = await repoLibrary.createQueryBuilder("library")
-            //     .leftJoinAndSelect("library.libraryWatchingStatuses", "photo")
-            //     .getMany();
-
-            console.log(all)
+            const all = await repoLibrary.find()
+            const watchingStatuses = await repoLibraryWatchingStatus.find()
+            
+            // const all = await repoLibrary.find({
+            //     // relations: ["libraryWatchingStatus"]
+            // });
 
             let library = {}
             all.forEach(item => {
+                const libraryWatchingStatus = watchingStatuses.filter((watchingStatus) => watchingStatus.libraryId === item.id && userId === watchingStatus.userId).length > 0
                 if (item.type in library) {
-                    library[item.type].push(item);
+                    library[item.type].push({
+                        ...item,
+                        libraryWatchingStatus
+                    });
                 } else {
-                    library[item.type] = [item];
+                    library[item.type] = [{
+                        ...item,
+                        libraryWatchingStatus
+                    }];
                 }
             })
-
+            console.log(library)
             response.send(library);
         } catch (err) {
             console.log(err.message)
@@ -88,19 +94,15 @@ export const watchVideoLibrary = functions.runWith(runtimeOpts).https.onRequest(
     applyMiddleware(request, response, async () => {
         const libraryId: number = request.body.id;
         const userId: number = request.body.userId;
-        console.log(libraryId, userId)
         const connection = await connect();
 
-        const repoLibrary = connection.getRepository(Library);
-        // const repoUsers = connection.getRepository(Users);
         const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
         
         try {
             const existing = await repoLibraryWatchingStatus.findOne({
                 where: {
-                    library: {
-                        id: libraryId
-                    }
+                    libraryId: libraryId,
+                    userId: userId,
                 }
             });
             if (existing) {
@@ -119,35 +121,9 @@ export const watchVideoLibrary = functions.runWith(runtimeOpts).https.onRequest(
             return;
         }
 
-        let library;
-        try {
-            library = await repoLibrary.findOne({
-                id: libraryId
-            });
-        } catch (err) {
-            response.send({
-                status: 404,
-                message: err.message,
-            });
-            return;
-        }
-
-        // let user;
-        // try {
-        //     user = await repoUsers.findOne({
-        //         id: userId
-        //     });
-        // } catch (err) {
-        //     response.send({
-        //         status: 404,
-        //         message: err.message
-        //     });
-        //     return;
-        // }
-
         const newLibraryWathcingStatus = new LibraryWatchingStatus();
-        newLibraryWathcingStatus.library = library;
-        // newLibraryWathcingStatus.user = user;
+        newLibraryWathcingStatus.libraryId = libraryId;
+        newLibraryWathcingStatus.userId = userId;
         try {
             await repoLibraryWatchingStatus.save(newLibraryWathcingStatus)
         } catch (err) {

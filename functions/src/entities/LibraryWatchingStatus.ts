@@ -1,17 +1,15 @@
-import { BaseEntity, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Library } from "./Library";
-import { Users } from "./Users";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity("library-watching-status")
+@Entity()
 export class LibraryWatchingStatus extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
   
-  @ManyToOne(() => Users, (user: Users) => user.id)
-  user: Users;
-
-  @ManyToOne(() => Library, (library: Library) => library.id)
-  library: Library;
+  @Column()
+  libraryId: number;
+  
+  @Column()
+  userId: number;
 
   @Column()
   createdAt: Date;
