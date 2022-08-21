@@ -38,7 +38,7 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
                     }];
                 }
             })
-            console.log(library)
+            
             response.send(library);
         } catch (err) {
             console.log(err.message)
