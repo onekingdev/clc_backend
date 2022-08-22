@@ -10,13 +10,26 @@ import {applyMiddleware} from "../middleware"
 let URL = require('url').URL;
 
 export const getLibrary = functions.https.onRequest(async (request, response) => {
-    applyMiddleware(request, response, async () =>{
+    applyMiddleware(request, response, async () => {
+        const { sortByNewest, sortByWatch } = request.query;
+        if (typeof sortByNewest === "object") {
+            return
+        }
+        if (typeof sortByWatch === "object") {
+            return
+        }
+        console.log(sortByNewest, sortByWatch)
         const connection = await connect();
         const userId = 158;
         const repoLibrary = connection.getRepository(Library);
         const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
         try {
-            const all = await repoLibrary.find()
+            const all = await repoLibrary.find({
+                order: {
+                    type: "ASC",
+                    createdAt: sortByNewest === "Newest" ? "DESC" : "ASC"
+                }
+            })
             const watchingStatuses = await repoLibraryWatchingStatus.find()
             
             // const all = await repoLibrary.find({
@@ -26,16 +39,46 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
             let library = {}
             all.forEach(item => {
                 const libraryWatchingStatus = watchingStatuses.filter((watchingStatus) => watchingStatus.libraryId === item.id && userId === watchingStatus.userId).length > 0
-                if (item.type in library) {
-                    library[item.type].push({
-                        ...item,
-                        libraryWatchingStatus
-                    });
+                if (sortByWatch === "Watched") {
+                    if (libraryWatchingStatus) {
+                        if (item.type in library) {
+                            library[item.type].push({
+                                ...item,
+                                libraryWatchingStatus
+                            });
+                        } else {
+                            library[item.type] = [{
+                                ...item,
+                                libraryWatchingStatus
+                            }];
+                        }
+                    }
+                } else if (sortByWatch === "Unwatched") {
+                    if (!libraryWatchingStatus) {
+                        if (item.type in library) {
+                            library[item.type].push({
+                                ...item,
+                                libraryWatchingStatus
+                            });
+                        } else {
+                            library[item.type] = [{
+                                ...item,
+                                libraryWatchingStatus
+                            }];
+                        }
+                    }
                 } else {
-                    library[item.type] = [{
-                        ...item,
-                        libraryWatchingStatus
-                    }];
+                    if (item.type in library) {
+                        library[item.type].push({
+                            ...item,
+                            libraryWatchingStatus
+                        });
+                    } else {
+                        library[item.type] = [{
+                            ...item,
+                            libraryWatchingStatus
+                        }];
+                    }
                 }
             })
             
