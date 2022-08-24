@@ -11,15 +11,24 @@ let URL = require('url').URL;
 
 export const getLibrary = functions.https.onRequest(async (request, response) => {
     applyMiddleware(request, response, async () => {
-        const { sortByNewest, sortByWatch } = request.query;
+        const { sortByNewest, sortByWatch, userId } = request.query;
+        console.log(userId)
         if (typeof sortByNewest === "object") {
             return
         }
         if (typeof sortByWatch === "object") {
             return
         }
+        if (typeof userId === "object") {
+            return
+        }
+        let userIdNum
+        try {
+            userIdNum = parseInt(userId, 10)
+        } catch (err) {
+            return
+        }
         const connection = await connect();
-        const userId = 158;
         const repoLibrary = connection.getRepository(Library);
         const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
         try {
@@ -37,7 +46,7 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
 
             let library = {}
             all.forEach(item => {
-                const libraryWatchingStatus = watchingStatuses.filter((watchingStatus) => watchingStatus.libraryId === item.id && userId === watchingStatus.userId).length > 0
+                const libraryWatchingStatus = watchingStatuses.filter((watchingStatus) => watchingStatus.libraryId === item.id && userIdNum === watchingStatus.userId).length > 0
                 if (sortByWatch === "Watched") {
                     if (libraryWatchingStatus) {
                         if (item.type in library) {
