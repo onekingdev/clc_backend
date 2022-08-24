@@ -18,7 +18,6 @@ export const getLibrary = functions.https.onRequest(async (request, response) =>
         if (typeof sortByWatch === "object") {
             return
         }
-        console.log(sortByNewest, sortByWatch)
         const connection = await connect();
         const userId = 158;
         const repoLibrary = connection.getRepository(Library);
