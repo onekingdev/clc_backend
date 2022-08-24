@@ -145,6 +145,7 @@ export const watchVideoLibrary = functions.runWith(runtimeOpts).https.onRequest(
     applyMiddleware(request, response, async () => {
         const libraryId: number = request.body.id;
         const userId: number = request.body.userId;
+        const watched: boolean = request.body.watched;
         const connection = await connect();
 
         const repoLibraryWatchingStatus = connection.getRepository(LibraryWatchingStatus);
@@ -157,11 +158,37 @@ export const watchVideoLibrary = functions.runWith(runtimeOpts).https.onRequest(
                 }
             });
             if (existing) {
-                response.send({
-                    status: 409,
-                    message: "Already existing"
-                });
-                return;
+                if (watched) {
+                    response.send({
+                        status: 409,
+                        message: "Already existing"
+                    });
+                    return;
+                } else {
+                    try {
+                        const removed = await repoLibraryWatchingStatus.delete({
+                            id: existing.id
+                        })
+                        if (removed.affected) {
+                            response.send({
+                                status: 200,
+                                message: ""
+                            })
+                        } else {
+                            response.send({
+                                status: 500,
+                                message: "Failed to remove"
+                            })
+                        }
+                        return;
+                    } catch (err) {
+                        response.send({
+                            status: 500,
+                            message: err.message
+                        })
+                        return;
+                    }
+                }
             }
         } catch (err) {
             console.log(err.message)
